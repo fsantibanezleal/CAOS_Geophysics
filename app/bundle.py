@@ -9,15 +9,52 @@ import statistics
 import zipfile
 
 from app.processing_contract import METHOD_ID, canonical_bytes, sha256
+from app.gravity_l2_contract import METHOD_ID as GRAVITY_L2_ID, validate_result as validate_gravity_l2_result
 
 
 MAX_MEMBER_BYTES = 8 * 1024 * 1024
 
 
 def build_bundle(dataset: dict, result: dict, dataset_sha: str, result_sha: str) -> bytes:
+    if dataset.get("modality") == "magnetic_flightline":
+        from app.magnetic_bundle import build_magnetic_bundle
+        return build_magnetic_bundle(dataset, result, dataset_sha, result_sha)
+    if dataset.get("modality") in {"ert_profile", "traveltime_profile"}:
+        from app.profile_bundle import build_profile_bundle
+        return build_profile_bundle(dataset, result, dataset_sha, result_sha)
     if dataset.get("modality") == "edi_transfer_function":
         from app.mt_bundle import build_mt_bundle
         return build_mt_bundle(dataset, result, dataset_sha, result_sha)
+    if result.get("method_id") == GRAVITY_L2_ID:
+        dataset_bytes = canonical_bytes(dataset)
+        result_bytes = canonical_bytes(result)
+        if sha256(dataset_bytes) != dataset_sha or sha256(result_bytes) != result_sha:
+            raise ValueError("M02 bundle inputs disagree with stored receipts")
+        _validate_m02_result(dataset, result, dataset_sha)
+        manifest = {
+            "schema": "geophysics.processing-bundle/v1",
+            "dataset_id": dataset["dataset_id"], "job_id": result["job_id"],
+            "method_id": result["method_id"], "parameters": result["parameters"],
+            "rights_decision": dataset["rights_decision"], "rights_statement": dataset["rights_statement"],
+            "axes": dataset["axis_order"], "dimensions": dataset["dimensions"],
+            "units": {"model": "kg/m3", "observation": "mGal", "coordinates": "m"},
+            "provenance": {"raw_sha256": dataset["parent_raw_sha256"],
+                           "dataset_sha256": dataset_sha, "request_sha256": result["request_sha256"],
+                           "engine_sha256": result["engine_sha256"]},
+            "members": {
+                "dataset.json": {"sha256": dataset_sha, "bytes": len(dataset_bytes)},
+                "result.json": {"sha256": result_sha, "bytes": len(result_bytes)},
+            },
+            "raw_bytes_included": False,
+        }
+        output = io.BytesIO()
+        with zipfile.ZipFile(output, "w", compression=zipfile.ZIP_STORED) as archive:
+            archive.writestr("manifest.json", canonical_bytes(manifest))
+            archive.writestr("dataset.json", dataset_bytes)
+            archive.writestr("result.json", result_bytes)
+        encoded = output.getvalue()
+        verify_bundle(encoded)
+        return encoded
     dataset_bytes = canonical_bytes(dataset)
     result_bytes = canonical_bytes(result)
     if sha256(dataset_bytes) != dataset_sha or sha256(result_bytes) != result_sha:
@@ -50,6 +87,20 @@ def build_bundle(dataset: dict, result: dict, dataset_sha: str, result_sha: str)
 
 def verify_bundle(encoded: bytes) -> tuple[dict, dict, dict]:
     """Strict local re-import; neither private paths nor raw bytes are accepted."""
+    if len(encoded) > 130 * 1024 * 1024:
+        raise ValueError("processing bundle exceeds absolute size cap")
+    try:
+        with zipfile.ZipFile(io.BytesIO(encoded), "r") as archive:
+            infos = archive.infolist()
+            if (infos and infos[0].filename == "manifest.json" and infos[0].compress_type == zipfile.ZIP_STORED
+                    and infos[0].file_size <= 1024 * 1024):
+                manifest_bytes = archive.read(infos[0])
+                manifest = json.loads(manifest_bytes)
+                if manifest.get("schema") == "geophysics.magnetic-processing-bundle/v1":
+                    from app.magnetic_bundle import verify_magnetic_bundle
+                    return verify_magnetic_bundle(encoded)
+    except (zipfile.BadZipFile, UnicodeError, json.JSONDecodeError, KeyError):
+        pass
     if len(encoded) > 2 * MAX_MEMBER_BYTES + 1024 * 1024:
         raise ValueError("processing bundle exceeds size cap")
     try:
@@ -81,6 +132,13 @@ def verify_bundle(encoded: bytes) -> tuple[dict, dict, dict]:
     if dataset.get("modality") == "edi_transfer_function":
         from app.mt_bundle import verify_mt_contents
         verify_mt_contents(manifest, dataset, result, sha256(raw["dataset.json"]))
+        return manifest, dataset, result
+    if result.get("method_id") == GRAVITY_L2_ID:
+        _verify_m02_contents(manifest, dataset, result, sha256(raw["dataset.json"]))
+        return manifest, dataset, result
+    if dataset.get("modality") in {"ert_profile", "traveltime_profile"}:
+        from app.profile_bundle import verify_profile_contents
+        verify_profile_contents(manifest, dataset, result, sha256(raw["dataset.json"]), sha256(raw["result.json"]))
         return manifest, dataset, result
     if (not isinstance(dataset.get("dimensions"), dict)
             or not isinstance(result.get("parameters"), dict)
@@ -161,3 +219,38 @@ def verify_bundle(encoded: bytes) -> tuple[dict, dict, dict]:
                                             "scaled_mad_mgal": scale, "flagged_count": sum(flags)}):
         raise ValueError("processing bundle numerical result mismatch")
     return manifest, dataset, result
+
+
+def _validate_m02_result(dataset: dict, result: dict, dataset_sha: str) -> None:
+    from types import SimpleNamespace
+
+    if (dataset.get("modality") != "gravity_station" or dataset.get("schema") != "geophysics.observation-dataset/v1"
+            or dataset.get("parent_raw_sha256") != result.get("raw_sha256")
+            or dataset.get("raw_asset_id") != result.get("raw_asset_id")
+            or dataset.get("source", {}).get("source_id") != result.get("source_id")):
+        raise ValueError("M02 bundle dataset and original-source identities differ")
+    job = SimpleNamespace(
+        id=result.get("job_id"), dataset_id=result.get("dataset_id"), dataset_sha256=dataset_sha,
+        request_sha256=result.get("request_sha256"),
+        request_json={key: result.get(key) for key in (
+            "parameters", "raw_asset_id", "raw_sha256", "raw_bytes", "source_id", "implementation_sha256")},
+    )
+    validate_gravity_l2_result(result, job)
+
+
+def _verify_m02_contents(manifest: dict, dataset: dict, result: dict, dataset_sha: str) -> None:
+    _validate_m02_result(dataset, result, dataset_sha)
+    expected = {
+        "schema": "geophysics.processing-bundle/v1",
+        "dataset_id": dataset["dataset_id"], "job_id": result["job_id"],
+        "method_id": GRAVITY_L2_ID, "parameters": result["parameters"],
+        "rights_decision": dataset["rights_decision"], "rights_statement": dataset["rights_statement"],
+        "axes": dataset["axis_order"], "dimensions": dataset["dimensions"],
+        "units": {"model": "kg/m3", "observation": "mGal", "coordinates": "m"},
+        "provenance": {"raw_sha256": dataset["parent_raw_sha256"],
+                       "dataset_sha256": dataset_sha, "request_sha256": result["request_sha256"],
+                       "engine_sha256": result["engine_sha256"]},
+        "members": manifest.get("members"), "raw_bytes_included": False,
+    }
+    if manifest != expected:
+        raise ValueError("M02 bundle manifest differs from its result, rights, units or provenance")

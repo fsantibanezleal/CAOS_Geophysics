@@ -1,0 +1,16 @@
+\begin{table}[htbp]
+\centering
+\scriptsize
+\caption{Same-case projected-to-raw CNN error ratios and paired intervals quantify the correction trade-off across four frozen synthetic cohorts.}
+\label{tab:projection-counterfactual}
+\begin{tabular}{lrrrrr}
+\toprule
+Cohort & $n$ & Velocity ratio [95\% CI] & Lower & Oracle-time ratio [95\% CI] & Lower \\
+\midrule
+In distribution & 160 & 1.9583 [1.9070, 2.0113] & 0/160 & 0.9290 [0.9093, 0.9495] & 113/160 \\
+Family shift & 80 & 0.9143 [0.9060, 0.9225] & 76/80 & 0.7013 [0.6830, 0.7207] & 80/80 \\
+Acquisition shift & 80 & 1.8798 [1.8123, 1.9502] & 0/80 & 0.9146 [0.8900, 0.9400] & 57/80 \\
+Joint shift & 160 & 0.9177 [0.9123, 0.9230] & 158/160 & 0.7080 [0.6954, 0.7213] & 160/160 \\
+\bottomrule
+\end{tabular}
+\end{table}

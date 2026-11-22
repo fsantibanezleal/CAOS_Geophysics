@@ -1,0 +1,116 @@
+{
+  "schema": "geophysics.local-validation-followup/v1",
+  "measured_at": "2026-10-30",
+  "checkout": {
+    "repository": "${CAOS_GEOPHYSICS_REPO}",
+    "branch": "task/geophysics-client-first-completion",
+    "head": "0cf38910ff69a90bf895ea1fde417bf62c049068",
+    "working_tree_dirty": true
+  },
+  "checks": {
+    "fresh_kernel_method_comparison_notebooks": {
+      "command": ".venv-pipeline/Scripts/python.exe scripts/run_notebooks.py --check --tmp ${CAOS_TEMP_ROOT}/caos-notebooks-current-2026-10-30 --only notebooks/en/04-mt/03-mt-method-comparison.ipynb --only notebooks/es/04-mt/03-mt-method-comparison.ipynb --only notebooks/en/05-ert/03-ert-method-comparison.ipynb --only notebooks/es/05-ert/03-ert-method-comparison.ipynb --only notebooks/en/06-seismology/03-seismic-method-comparison.ipynb --only notebooks/es/06-seismology/03-seismic-method-comparison.ipynb --only notebooks/en/07-joint/03-joint-method-comparison.ipynb --only notebooks/es/07-joint/03-joint-method-comparison.ipynb --only notebooks/en/08-learning/03-learning-method-comparison.ipynb --only notebooks/es/08-learning/03-learning-method-comparison.ipynb --keep-results",
+      "result": "passed",
+      "exit_code": 0,
+      "notebooks_executed": 10,
+      "languages": [
+        "en",
+        "es"
+      ],
+      "methods": [
+        "MT",
+        "ERT",
+        "seismic",
+        "joint inversion",
+        "learning"
+      ],
+      "results_directory": "${CAOS_TEMP_ROOT}/caos-notebooks-current-2026-10-30/run-notebooks-m4vklqal/results",
+      "source_notebooks_modified": false
+    },
+    "metadata_api_tests": {
+      "command": ".venv-api/Scripts/python.exe -m pytest tests/api/test_metadata.py -q",
+      "result": "passed",
+      "passed": 14,
+      "failed": 0,
+      "scope": "Dataset metadata parsing and fail-closed adapter selection, including StationXML as companion instrument metadata"
+    },
+    "full_notebook_replay": {
+      "command": ".venv-notebooks/Scripts/python.exe scripts/run_notebooks.py --check --tmp ${CAOS_TEMP_ROOT}/caos-geophysics-notebook-gate-2026-10-30",
+      "result": "passed after refreshing stale rendered outputs and rechecking affected notebooks",
+      "notebooks_total": 62,
+      "initial_full_run": {
+        "passed": 58,
+        "stale_output_failures": 4,
+        "execution_errors": 0
+      },
+      "refreshed_outputs": [
+        "notebooks/en/08-learning/02-learning-heldout.ipynb",
+        "notebooks/en/08-learning/06-nullspace-refinement-evidence.ipynb",
+        "notebooks/es/08-learning/06-nullspace-refinement-evidence.ipynb"
+      ],
+      "affected_notebooks_rechecked": 4,
+      "affected_notebooks_passed": 4,
+      "languages": [
+        "en",
+        "es"
+      ]
+    },
+    "focused_python_regressions": {
+      "command": ".venv-api/Scripts/python.exe -m pytest tests/test_check_internal_names.py tests/test_sdd_convergence.py tests/test_run_notebooks.py -q",
+      "result": "passed",
+      "passed": 30,
+      "failed": 0
+    },
+    "product_ci_source_gates": {
+      "result": "passed",
+      "gates": [
+        "artifact inventory",
+        "M13 browser assets",
+        "bilingual docs matrix",
+        "M01-M13 structural gate inventory",
+        "deploy-place VPS-only",
+        "contract catalog",
+        "reproducible OpenAPI",
+        "API contract schemas",
+        "internal method names",
+        "README areas",
+        "template residue",
+        "single origin",
+        "content standards",
+        "CI budget",
+        "readiness record"
+      ],
+      "boundary": "Source and structure checks only; not scientific or release acceptance."
+    },
+    "frontend_tests": {
+      "command": "npm test",
+      "result": "failed due to required retained external fixtures missing; no substitute was generated",
+      "passed": 380,
+      "failed": 36,
+      "skipped": 23,
+      "total": 439
+    },
+    "frontend_production_build": {
+      "command": "npm run build",
+      "result": "passed",
+      "warning": "Two minified chunks exceed 500 kB."
+    }
+  },
+  "acceptance_state": {
+    "convergence_ledger": {
+      "structural_result": "valid",
+      "pass": 1,
+      "fail": 1,
+      "unresolved": 17
+    },
+    "scientific_acceptance": false,
+    "host_qualification": false,
+    "deployment_verified": false
+  },
+  "limitations": [
+    "All 62 current bilingual notebooks pass fresh-kernel output checks, combining the full replay with an exact four-notebook recheck after three output refreshes.",
+    "Frontend suite acceptance remains open because exact retained M04/M11 external custody fixtures are absent from their recorded paths; no substitute fixture was generated.",
+    "Local source gates and a production build do not establish scientific acceptance, VPS qualification, deployment, or post-deployment verification.",
+    "The working tree remains dirty and this evidence is not tied to a release commit."
+  ]
+}

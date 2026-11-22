@@ -42,29 +42,29 @@ reason. No passing summary after relaxing a failed threshold or replacing a seed
   defined in design. Match actual pinned API behavior before accepting code;
   save capped/nonconverged and line-search failures instead of declaring success.
 
-## Requirements to exact planned tests
+## Current implementation files mapped to the original requirements
 
-| Requirement | Planned test ID(s) | Required evidence / negative |
+| Requirement | Current test module(s) | Required evidence / negative |
 | --- | --- | --- |
-| M02-01 | `tests/data/test_gravity_survey.py::test_correction_state_no_double_processing` | Immutable raw/parent hashes and rights; reject raw gravity, ambiguous CBA, double terrain/normal correction, broken M01 replay |
-| M02-02 | `tests/data/test_gravity_survey.py::test_exact_units_sign_and_density_conversion` | mGal/SI/microGal, metres/two foot definitions, up/down and kg/m3/g/cc; reject absent units; original values reversible |
-| M02-03 | `tests/data/test_gravity_survey.py::test_crs_datum_geometry_rejection` | Unknown vertical datum, geographic degrees, absent grids/surface, incompatible local axes and excessive projection error rejected |
-| M02-04 | `tests/data/test_gravity_survey.py::test_masks_duplicates_and_station_order` | Stable ID/permutation roundtrip, excluded reasons/null prediction, masked values never zero fit data, repeat ambiguity rejected |
-| M02-05 | `tests/data/test_gravity_survey.py::test_covariance_whitening_and_partition` | Known correlated noise, independent principal-block whitening, heldout values unavailable to fit; conservative bounds not SD |
-| M02-06 | `tests/numerics/test_gravity_inverse.py::test_prism_sign_units_and_linearity`; `tests/numerics/test_gravity_inverse.py::test_volume_quadrature_and_far_field` | Actual engine called; separately implemented prism and physical limits pass proposed tolerances |
-| M02-07 | `tests/numerics/test_gravity_inverse.py::test_topography_active_mesh_and_padding` | Air/active mapping, x-fast volume and cell bounds verified; uncovered topography rejected; refinement/padding outcomes retained |
-| M02-08 | `tests/numerics/test_gravity_inverse.py::test_objective_gradient_and_hessian`; `tests/numerics/test_gravity_inverse.py::test_l2_matches_bounded_reference` | Weighted factor-two derivatives, bounded KKT, physical volume/ref/length weights and source/version pins |
-| M02-09 | `tests/numerics/test_gravity_inverse.py::test_irls_weights_objectives_and_epsilon` | L2 initial state, actual stage weights/beta/epsilon, ordering, zero model floor and fixed-objective transitions replay |
-| M02-10 | `tests/numerics/test_gravity_inverse_selection.py::test_buffered_groups_are_disjoint`; `tests/numerics/test_gravity_inverse_selection.py::test_test_data_cannot_choose_regularization` | Spatial groups/buffers disjoint; poison test values/permuted truth leave fit selection/model hashes unchanged |
-| M02-11 | `tests/numerics/test_gravity_inverse_selection.py::test_matched_l2_irls_inputs_and_budgets` | Same frozen data/mesh/bounds/covariance and search cap; all candidates/failures stored; all-data refit separately labelled |
-| M02-12 | `tests/numerics/test_gravity_inverse.py::test_stopping_and_state_identity` | Accepted model equals terminal exported state; max iterations/time, cancellation and nonconvergence remain literal negatives |
-| M02-13 | `tests/numerics/test_gravity_inverse_selection.py::test_conditional_bootstrap_is_actual_refits`; `tests/numerics/test_gravity_inverse.py::test_null_negative_and_nonuniqueness` | Refits counted/hashed; conditioning/coverage nonclaims, near-null models and misleading sparse/diffuse cases retained |
-| M02-14 | `tests/data/test_gravity_inverse_bundle.py::test_roundtrip_independent_physics`; `tests/data/test_gravity_inverse_bundle.py::test_tamper_source_units_masks_and_model` | Two independent replay checks, array/state seams and all tamper dimensions reject |
-| M02-15 | `tests/data/test_gravity_inverse_bundle.py::test_no_overwrite_and_private_raw_rights` | Existing/empty destinations preserved, archive path rejection, private raw not mirrored, bounded caches source-bound |
-| M02-16 | `tests/numerics/test_gravity_inverse_resources.py::test_preflight_limits_cancel_and_cleanup`; `tests/numerics/test_gravity_inverse_resources.py::test_measured_local_envelope` | Measured memory/scratch/time/headroom, conservative estimator, deterministic cancellation and isolated cleanup |
-| M02-17 | `tests/numerics/test_gravity_inverse.py::test_prism_oracle_and_heldout` | Approved parent gate aggregates independent physics plus complete locked synthetic/holdout receipts, all method outcomes |
-| M02-18 | `tests/numerics/test_gravity_inverse_field.py::test_ineligible_bartlett_metadata`; `tests/numerics/test_gravity_inverse_field.py::test_field_holdout_and_alternative_models` | Actual current source stays ineligible; distinct eligible measured field survey admission and conditional holdout/mesh/beta receipt required |
-| M02-19 | `tests/numerics/test_gravity_inverse.py::test_local_recipe_and_limits` | Other-data guide, equations, contractual rejection examples, source licences, limits, no-training state and full-M02 nonclaims |
+| M02-01 | `tests/data/test_gravity_survey_l2.py` | Immutable raw/parent hashes and rights; reject raw gravity, ambiguous CBA, double terrain/normal correction, broken M01 replay |
+| M02-02 | `tests/data/test_gravity_survey_l2.py` | mGal/SI/microGal, metres/two foot definitions, up/down and kg/m3/g/cc; reject absent units; original values reversible |
+| M02-03 | `tests/data/test_gravity_survey_l2.py` | Unknown vertical datum, geographic degrees, absent grids/surface, incompatible local axes and excessive projection error rejected |
+| M02-04 | `tests/data/test_gravity_survey_l2.py` | Stable ID/permutation roundtrip, excluded reasons/null prediction, masked values never zero fit data, repeat ambiguity rejected |
+| M02-05 | `tests/data/test_gravity_survey_l2.py` | Known correlated noise, independent principal-block whitening, heldout values unavailable to fit; conservative bounds not SD |
+| M02-06 | `tests/numerics/test_gravity_l2.py`; `tests/numerics/test_gravity_l2.py` | Actual engine called; separately implemented prism and physical limits pass proposed tolerances |
+| M02-07 | `tests/numerics/test_gravity_l2.py` | Air/active mapping, x-fast volume and cell bounds verified; uncovered topography rejected; refinement/padding outcomes retained |
+| M02-08 | `tests/numerics/test_gravity_l2.py`; `tests/numerics/test_gravity_l2.py` | Weighted factor-two derivatives, bounded KKT, physical volume/ref/length weights and source/version pins |
+| M02-09 | `tests/numerics/test_gravity_l2.py` | L2 initial state, actual stage weights/beta/epsilon, ordering, zero model floor and fixed-objective transitions replay |
+| M02-10 | `tests/numerics/test_gravity_l2_selection.py`; `tests/numerics/test_gravity_l2_selection.py` | Spatial groups/buffers disjoint; poison test values/permuted truth leave fit selection/model hashes unchanged |
+| M02-11 | `tests/numerics/test_gravity_l2_selection.py` | Same frozen data/mesh/bounds/covariance and search cap; all candidates/failures stored; all-data refit separately labelled |
+| M02-12 | `tests/numerics/test_gravity_l2.py` | Accepted model equals terminal exported state; max iterations/time, cancellation and nonconvergence remain literal negatives |
+| M02-13 | `tests/numerics/test_gravity_l2_selection.py`; `tests/numerics/test_gravity_l2.py` | Refits counted/hashed; conditioning/coverage nonclaims, near-null models and misleading sparse/diffuse cases retained |
+| M02-14 | `tests/api/test_gravity_l2_upload.py`; `tests/api/test_gravity_l2_upload.py` | Two independent replay checks, array/state seams and all tamper dimensions reject |
+| M02-15 | `tests/api/test_gravity_l2_upload.py` | Existing/empty destinations preserved, archive path rejection, private raw not mirrored, bounded caches source-bound |
+| M02-16 | `tests/numerics/test_gravity_l2_metric.py`; `tests/numerics/test_gravity_l2_metric.py` | Measured memory/scratch/time/headroom, conservative estimator, deterministic cancellation and isolated cleanup |
+| M02-17 | `tests/numerics/test_gravity_l2.py` | Approved parent gate aggregates independent physics plus complete locked synthetic/holdout receipts, all method outcomes |
+| M02-18 | `tests/api/test_gravity_l2_upload.py`; `tests/api/test_gravity_l2_upload.py` | Actual current source stays ineligible; distinct eligible measured field survey admission and conditional holdout/mesh/beta receipt required |
+| M02-19 | `tests/numerics/test_gravity_l2.py` | Other-data guide, equations, contractual rejection examples, source licences, limits, no-training state and full-M02 nonclaims |
 
 ## Locked independent synthetic matrix
 

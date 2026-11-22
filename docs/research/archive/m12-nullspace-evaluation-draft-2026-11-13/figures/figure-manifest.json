@@ -1,0 +1,83 @@
+{
+  "schema": "caos-geophysics.m12-nullspace-figures/v1",
+  "receipt_path": "data/derived/v2/models/m12-nullspace-v1_1/receipt.json",
+  "receipt_sha256": "30df0c2ad495bd850dda602b1c96725be8290dd086119fb3e8e75355fe9dea22",
+  "bootstrap_summary_path": "docs/validation/m12-nullspace-v1_1-bootstrap-2026-10-30.json",
+  "bootstrap_summary_sha256": "a5a7ffd6e3dc3a3ccb20096f3684cf73adb8e1b023896e3a8d987af72ae97bc1",
+  "script_path": "scripts/build_m12_nullspace_figures.py",
+  "script_sha256": "2c2dd2ae4f3c0a1f2250d325777ab27d4026cf09f43bd40546c33f1b560dfdd9",
+  "cohort_counts": {
+    "id_test": 160,
+    "family_only": 80,
+    "acquisition_only": 80,
+    "joint_ood": 160
+  },
+  "scientific_acceptance": false,
+  "figures": [
+    {
+      "path": "m12-nullspace-paired-error-ecdf.png",
+      "bytes": 246150,
+      "sha256": "c55c3b0b8b99b433c6bbf45c5b2ce065aa3fcec75851f93132f73138bae01de5"
+    },
+    {
+      "path": "m12-nullspace-paired-error-ecdf.pdf",
+      "bytes": 40896,
+      "sha256": "cd05da58757ef30a370f36a86ed06f9a221ec2b3b7bf9cbff68c3cc3bef6d788"
+    },
+    {
+      "path": "m12-nullspace-case-error-tradeoffs.png",
+      "bytes": 170818,
+      "sha256": "ce75da10e98edb443867907f9b70be56546d2eb3dea561be8ca53533301e02cd"
+    },
+    {
+      "path": "m12-nullspace-case-error-tradeoffs.pdf",
+      "bytes": 39880,
+      "sha256": "c40113a025d8c833116977803149622de60f63423e4ca03700e5295f5c5caa02"
+    },
+    {
+      "path": "m12-nullspace-aggregate-ratio-intervals.png",
+      "bytes": 90512,
+      "sha256": "6ccb8c572202a956ac5338a00e032097822eb92f42077aa4aad74a24eb58ceb5"
+    },
+    {
+      "path": "m12-nullspace-aggregate-ratio-intervals.pdf",
+      "bytes": 27049,
+      "sha256": "3e651807e41661450e65742053954811c74ae9fd10281d3e4aebf6b8fd938ce4"
+    },
+    {
+      "path": "m12-nullspace-calibration-alpha-selection.png",
+      "bytes": 129726,
+      "sha256": "fdc5d7835d01ec9f15c3c8090aa3c0233bac4b111e9ff44ed6c5d720c44b9ade"
+    },
+    {
+      "path": "m12-nullspace-calibration-alpha-selection.pdf",
+      "bytes": 24763,
+      "sha256": "746dbf44d02a6c92bf974af5f0b628a616397f8369b37d1cd74344169a22943a"
+    },
+    {
+      "path": "m12-nullspace-projection-diagnostics.png",
+      "bytes": 112966,
+      "sha256": "407d4a09c7cf0f647d628c9b2a9216dfa160e2e2b1056fd090b452307c508a72"
+    },
+    {
+      "path": "m12-nullspace-projection-diagnostics.pdf",
+      "bytes": 27195,
+      "sha256": "79a7a82edae0e51c73ecebdd6226b888575c0d791ebf38722f0b8138bbd7fa96"
+    },
+    {
+      "path": "m12-nullspace-subgroup-ratios.png",
+      "bytes": 160174,
+      "sha256": "e79f220167e30f264e627c962c55bc3da4215848925e03112ebbfbd80ded2397"
+    },
+    {
+      "path": "m12-nullspace-subgroup-ratios.pdf",
+      "bytes": 33431,
+      "sha256": "32b13ee25153d210ed30b95a780c959951a71a1aaf14056b7cc4b5f33325b732"
+    }
+  ],
+  "limitations": [
+    "Figures describe case-level metrics in the frozen synthetic receipt.",
+    "The receipt does not contain raw generated input arrays or the source checkpoint required for a full solver replay.",
+    "These figures do not establish field accuracy or geological recovery."
+  ]
+}

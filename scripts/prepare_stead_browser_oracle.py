@@ -8,6 +8,7 @@ This does not execute a browser or establish browser parity by itself.
 from __future__ import annotations
 
 import argparse
+import gzip
 import hashlib
 import json
 from pathlib import Path
@@ -44,8 +45,16 @@ def prepare(assets_dir: Path, frozen_receipt_path: Path, output_dir: Path) -> di
             or assets.get("output", {}).get("shape") != [1, 3, SAMPLES]
             or assets.get("input", {}).get("file_dtype") != "float32-little-endian"):
         raise ValueError("public assets are not bound to the frozen held-out model/split")
-    model_path = assets_dir / assets["model"]["file"]
-    if file_sha256(model_path) != assets["model"]["sha256"]:
+    model_meta = assets["model"]
+    source_path = assets_dir / model_meta.get("source_file", model_meta["file"])
+    model_bytes = source_path.read_bytes()
+    if source_path.suffix == ".gz":
+        if (len(model_bytes) != model_meta.get("source_bytes")
+                or hashlib.sha256(model_bytes).hexdigest() != model_meta.get("source_sha256")):
+            raise ValueError("compressed public ONNX source differs from its manifest")
+        model_bytes = gzip.decompress(model_bytes)
+    if (len(model_bytes) != model_meta["bytes"]
+            or hashlib.sha256(model_bytes).hexdigest() != model_meta["sha256"]):
         raise ValueError("public ONNX model differs from its manifest")
     checkpoint_path = frozen_receipt_path.parent / frozen["checkpoint_filename"]
     if file_sha256(checkpoint_path) != frozen["checkpoint_sha256"]:
@@ -61,7 +70,7 @@ def prepare(assets_dir: Path, frozen_receipt_path: Path, output_dir: Path) -> di
     model = PhaseUNet()
     model.load_state_dict(checkpoint["model"], strict=True)
     model.eval()
-    session = ort.InferenceSession(str(model_path), providers=["CPUExecutionProvider"])
+    session = ort.InferenceSession(model_bytes, providers=["CPUExecutionProvider"])
     if ([item.name for item in session.get_inputs()] != ["waveform"]
             or [item.name for item in session.get_outputs()] != ["probabilities"]):
         raise ValueError("public ONNX input/output names differ")

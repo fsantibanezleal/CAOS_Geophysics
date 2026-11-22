@@ -11,6 +11,18 @@ const source = {
 const json = (value: unknown, status = 200) => new Response(JSON.stringify(value), { status, headers: { "Content-Type": "application/json" } });
 
 describe("same-origin API transport", () => {
+  it("retains producer JSON lexical bytes and cancels oversized streams", async () => {
+    const raw = '{"value":1.0,"small":1e-09}', signal = new AbortController().signal;
+    const fetcher = vi.fn(async () => new Response(raw, {headers:{"content-type":"application/json"}}));
+    const client = new ApiClient("https://geophysics.example.org", fetcher);
+    expect(new TextDecoder().decode(await client.requestJsonBytes("/api/jobs/result", 100, signal))).toBe(raw);
+    expect((fetcher.mock.calls as unknown as [string, RequestInit][])[0][1]).toMatchObject({signal,credentials:"same-origin",redirect:"error",cache:"no-store"});
+    const cancel = vi.fn(), stream = new ReadableStream<Uint8Array>({start(controller){controller.enqueue(new Uint8Array(101));},cancel});
+    const bounded = new ApiClient("https://geophysics.example.org", async () => new Response(stream,{headers:{"content-type":"application/json"}}));
+    await expect(bounded.requestJsonBytes("/api/jobs/result",100)).rejects.toThrow("byte bound"); expect(cancel).toHaveBeenCalledOnce();
+    await expect(client.requestJsonBytes("/api/jobs/result",0)).rejects.toThrow("bound");
+    await expect(new ApiClient("https://geophysics.example.org",async()=>new Response("{}",{headers:{"content-type":"text/html"}})).requestJsonBytes("/api/jobs/result",100)).rejects.toThrow("non-JSON");
+  });
   it("same_origin_transport_and_errors", async () => {
     const transport = vi.fn(async () => json(source)) as unknown as typeof fetch;
     const client = new ApiClient("https://geophysics.example.org", transport);

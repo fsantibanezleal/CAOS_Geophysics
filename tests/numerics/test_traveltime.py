@@ -4,6 +4,7 @@ from copy import deepcopy
 import hashlib
 import json
 import math
+import os
 from pathlib import Path
 import subprocess
 import sys
@@ -12,10 +13,137 @@ import numpy as np
 import pytest
 
 import traveltime as pipeline
-from traveltime import Survey, TraveltimeError, run, run_source, shot_splits
+from traveltime import Survey, TraveltimeError, run, run_source, run_user_survey, shot_splits
 
 ROOT = Path(__file__).resolve().parents[2]
-RAW = ROOT / "data/downloads/pygimli/koenigsee.sgt"
+DATA_ROOT = Path(os.environ.get("GEOPHYSICS_LOCAL_DATA_ROOT", ROOT))
+RAW = DATA_ROOT / "data/downloads/pygimli/koenigsee.sgt"
+
+
+def _small_sgt_bytes():
+    return ("4 # shot/geophone points\n#x y\n0 0\n10 1\n20 2\n30 1\n"
+            "4 # measurements\n#s g t\n1 2 0.01\n1 3 0.02\n"
+            "2 3 0.01\n4 1 0.03\n").encode()
+
+
+def _user_source_record(**changes):
+    return {"id": "local-survey-01", "citation": "Owner supplied local test survey",
+            "rights": "owner-permitted", "scope": "owner-provided",
+            "frame": "local-x-y-down", "units": {"distance": "m", "time": "s"},
+            **changes}
+
+
+def test_user_survey_qc_preserves_declared_provenance_and_cleans_staging(tmp_path, monkeypatch):
+    source_path = tmp_path / "survey.sgt"
+    source_path.write_bytes(_small_sgt_bytes())
+    temp_root = tmp_path / "external-temp"
+    temp_root.mkdir()
+    monkeypatch.setenv("CAOS_TEMP_ROOT", str(temp_root))
+
+    report = run_user_survey(source_path, source=_user_source_record(), allow_inverse=False)
+
+    assert report["source_id"] == "local-survey-01"
+    assert report["source_kind"] == "local-user-supplied"
+    assert report["source_sha256"] == hashlib.sha256(source_path.read_bytes()).hexdigest()
+    assert report["engine_input_sha256"] != report["source_sha256"]
+    assert report["coordinate_transform"] == (
+        "source y-down-positive; engine y-up-positive = -source y"
+    )
+    assert report["rights_decision"] == "owner-declared-local-only"
+    assert report["raw_publication"] is False
+    assert report["source_record"]["verification"] == "user-declared; not independently verified"
+    assert report["qc"]["pick_count"] == 4
+    assert report["qc"]["y_range_m"] == [-2.0, 0.0]
+    assert report["qc"]["units"]["y"] == (
+        "m, input y-down-positive; normalized to pyGIMLi y-up-positive"
+    )
+    assert report["inverse_status"] == "not-run"
+    assert list(temp_root.iterdir()) == []
+
+
+def test_user_survey_keeps_y_up_coordinates_and_exact_engine_bytes(tmp_path, monkeypatch):
+    source_path = tmp_path / "survey.sgt"
+    source_path.write_bytes(_small_sgt_bytes())
+    temp_root = tmp_path / "external-temp"
+    temp_root.mkdir()
+    monkeypatch.setenv("CAOS_TEMP_ROOT", str(temp_root))
+
+    report = run_user_survey(
+        source_path, source=_user_source_record(frame="local-x-y-up"), allow_inverse=False
+    )
+
+    digest = hashlib.sha256(source_path.read_bytes()).hexdigest()
+    assert report["source_sha256"] == digest
+    assert report["engine_input_sha256"] == digest
+    assert report["coordinate_transform"] == (
+        "source and engine y-up-positive; no coordinate sign transform"
+    )
+    assert report["qc"]["y_range_m"] == [0.0, 2.0]
+    assert list(temp_root.iterdir()) == []
+
+
+def test_user_survey_full_synthetic_path(tmp_path, monkeypatch):
+    pytest.importorskip("pygimli")
+    x = np.arange(15, dtype=float) * 10.0
+    sensors = np.column_stack((x, np.zeros_like(x)))
+    pairs = np.asarray(
+        [(shot, receiver) for shot in range(len(x)) for receiver in range(len(x))
+         if shot != receiver], dtype=int
+    )
+    times = np.linalg.norm(
+        sensors[pairs[:, 1]] - sensors[pairs[:, 0]], axis=1
+    ) / 2500.0
+    source_path = tmp_path / "synthetic-homogeneous.sgt"
+    source_path.write_bytes(pipeline._serialize_sgt(Survey(sensors, pairs, times)))
+    temp_root = tmp_path / "external-temp"
+    temp_root.mkdir()
+    monkeypatch.setenv("CAOS_TEMP_ROOT", str(temp_root))
+
+    report = run_user_survey(
+        source_path, source=_user_source_record(id="homogeneous-user-control")
+    )
+
+    assert report["source_kind"] == "local-user-supplied"
+    assert report["source_sha256"] == hashlib.sha256(source_path.read_bytes()).hexdigest()
+    assert report["engine_input_sha256"] != report["source_sha256"]
+    assert report["coordinate_transform"] == (
+        "source y-down-positive; engine y-up-positive = -source y"
+    )
+    assert report["qc"]["pick_count"] == len(times)
+    assert report["truth"] is None
+    assert report["raw_publication"] is False
+    assert report["inverse_status"] in {"passed", "not-converged"}
+    assert report["inverse"]
+    assert set(report["inverse"]) == {"interleaved", "central_block"}
+    assert list(temp_root.iterdir()) == []
+
+
+@pytest.mark.parametrize("source", [
+    _user_source_record(rights=["CC-BY"]),
+    _user_source_record(rights="CC-BY"),
+    _user_source_record(frame=["local-x-y-down"]),
+    _user_source_record(scope="public-reuse"),
+    _user_source_record(frame="unknown"),
+    _user_source_record(units={"distance": "km", "time": "s"}),
+])
+def test_user_survey_rejects_inconsistent_source_declarations(tmp_path, monkeypatch, source):
+    source_path = tmp_path / "survey.sgt"
+    source_path.write_bytes(_small_sgt_bytes())
+    temp_root = tmp_path / "external-temp"
+    temp_root.mkdir()
+    monkeypatch.setenv("CAOS_TEMP_ROOT", str(temp_root))
+
+    with pytest.raises(TraveltimeError):
+        run_user_survey(source_path, source=source, allow_inverse=False)
+
+    assert list(temp_root.iterdir()) == []
+
+
+def test_provider_run_rejects_mismatched_original_hash(tmp_path):
+    source_path = tmp_path / "survey.sgt"
+    source_path.write_bytes(_small_sgt_bytes())
+    with pytest.raises(TraveltimeError, match="source SHA-256"):
+        run(source_path, source_sha256="0" * 64, allow_inverse=False)
 
 
 def test_homogeneous_forward_oracle():
@@ -102,7 +230,7 @@ def test_field_receipt_and_uncertainty_boundary(field_result):
         assert math.isfinite(sensitivity["heldout_rmse_s"])
         assert 0 < sensitivity["coverage_nonzero_cell_fraction"] <= 1
     target = Path(result["local_receipt_path"])
-    assert target.is_relative_to(ROOT / "data/raw/traveltime")
+    assert target.is_relative_to(DATA_ROOT / "data/raw/traveltime")
     assert target.exists()
     assert hashlib.sha256(target.read_bytes()).hexdigest() == Path(str(target) + ".sha256").read_text().strip()
     saved = json.loads(target.read_text(encoding="utf-8"))
@@ -118,9 +246,10 @@ def test_independent_process_fit_reproducibility():
 import json
 from pathlib import Path
 import sys
+import os
 sys.path.insert(0, 'data-pipeline')
 import traveltime as m
-path = Path('data/downloads/pygimli/koenigsee.sgt')
+path = Path(os.environ['GEOPHYSICS_LOCAL_DATA_ROOT']) / 'data/downloads/pygimli/koenigsee.sgt'
 survey = m.parse_sgt(path)
 tt, data = m._pygimli_data(path, survey)
 fit = m._invert_once(tt, data, survey, m.shot_splits(survey)['interleaved'],

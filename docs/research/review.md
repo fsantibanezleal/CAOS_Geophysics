@@ -1,4 +1,4 @@
-# Research and implementation review · updated 2026-09-26
+# Research and implementation review · updated 2026-10-30
 
 ## Course as a source, not a product template
 
@@ -37,7 +37,7 @@ The implemented CNN/autoencoder are compact baselines, not SOTA neural architect
 
 ## Scientific demonstration and manuscript decision
 
-The useful demonstration is the contrast between visually persuasive models and physical evidence: remanence breaks an induced assumption; joint coupling can bias incompatible structures; a better waveform fit can retain a large velocity error; a held-out geometry challenges a learned prior. These are established phenomena shown in an integrated, reproducible instrument. A technical software report is warranted. Algorithmic novelty or publication priority has not been established, so the manuscript explicitly makes neither claim.
+The useful demonstration is the contrast between visually persuasive models and physical evidence: remanence breaks an induced assumption; joint coupling can bias incompatible structures; a better waveform fit can retain a large velocity error; a held-out geometry challenges a learned prior. These are established phenomena shown in an integrated, reproducible instrument. A technical software report is warranted. Algorithmic novelty or publication priority has not been established, so the report makes neither claim. The M12 null-space follow-up is reviewed against classical null-space methods and current learned-tomography families in the [focused literature review](m12-learned-traveltime-review-2026-10-30.md); it reports a bounded synthetic result but does not isolate the projection's effect against the raw network or establish superiority over state-of-the-art methods.
 
 ## Acquisition and licensing
 

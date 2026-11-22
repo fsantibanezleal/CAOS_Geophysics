@@ -406,6 +406,8 @@ def test_host_gate_defaults_closed(make_harness):
     methods = harness.client.get(f"/api/projects/{project['id']}/datasets/{dataset['dataset_id']}/methods").json()
     assert methods["methods"] == []
     assert {item["method_id"] for item in methods["unavailable"]} == {M05_ID, M06_ID}
+    assert all(item["reason_fields"] == ["settings.mt_online_enabled", "host.actual_ml_vps_admission"]
+               for item in methods["unavailable"])
     denied = harness.request("POST", f"/api/projects/{project['id']}/jobs", json={
         "dataset_id": dataset["dataset_id"], "method_id": M05_ID, "parameters": {},
     })

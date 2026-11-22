@@ -1,0 +1,34 @@
+{
+  "schema": "caos-geophysics.m12-projection-counterfactual-figure/v1",
+  "analysis_path": "data/derived/v2/models/m12-projection-counterfactual-20261112/counterfactual-analysis.json",
+  "analysis_sha256": "59b53d11b890fa43cf7e5680040a99016b96e00b3f95da61c6459fe80002c939",
+  "builder_path": "scripts/build_m12_projection_counterfactual_figure.py",
+  "builder_sha256": "a5d14f537bb294c79d657858767be6c543af9349aa651837ac418cbc2406463c",
+  "cohort_counts": {
+    "id_test": 160,
+    "family_only": 80,
+    "acquisition_only": 80,
+    "joint_ood": 160
+  },
+  "scientific_acceptance": false,
+  "figures": [
+    {
+      "path": "m12-projection-counterfactual.png",
+      "bytes": 134274,
+      "sha256": "5009e2742422ed40097a0b23dc9d829cdb36a89dac314ba9ccd0da10c99d6211"
+    },
+    {
+      "path": "m12-projection-counterfactual.pdf",
+      "bytes": 29057,
+      "sha256": "42697ac3db48bb20570c76f4807389e52f7b5b757d4fa30d959297a8498ac17e"
+    }
+  ],
+  "tables": [
+    {
+      "path": "manuscripts/m12-nullspace-refinement-v0.01/generated/projection-counterfactual-table.tex",
+      "bytes": 783,
+      "sha256": "f0aee33f1485730b859f83551c74c9d4d208ea398fbc4beffddc048a4d7d1946"
+    }
+  ],
+  "interpretation": "Ratios are projected/raw CNN mean per-case RMSE on identical held-out cases; intervals resample cases within each fixed synthetic cohort."
+}

@@ -11,9 +11,10 @@ import zipfile
 
 import pytest
 
+import potential_sources
 from potential_sources import HEADER, ROOT, extract_selected, profile_gravity, safe_target
 from pathlib import PurePosixPath
-from sources import SourceError, acquire_source, load_ledger
+from sources import SourceError, acquire_source, load_ledger, local_data_root
 
 
 def source_archive(tmp_path, entries=None, **caps):
@@ -42,7 +43,7 @@ def source_archive(tmp_path, entries=None, **caps):
     return record, raw, payload
 
 
-def test_pinned_source_identity_and_rights():
+def test_adversarial_pinned_source_identity_and_rights():
     ledger = load_ledger()
     original = ledger["bartlett-fgdc"]
     derivative = ledger["clear-lake-author-potentials-v2"]
@@ -59,7 +60,7 @@ def test_pinned_source_identity_and_rights():
         "data/ground_gravity_data.csv", "data/aeromagnetic_data.csv", "data/topography_data.csv", "README.pdf"}
 
 
-def test_selected_members_immutable(tmp_path):
+def test_adversarial_selected_members_immutable(tmp_path):
     record, raw, payload = source_archive(tmp_path)
     first = extract_selected(record, raw, root=tmp_path)
     target = tmp_path / first["members"][0]["path"]
@@ -83,7 +84,7 @@ def test_archive_path_negative_controls(tmp_path, bad_name):
     assert not (tmp_path / "data/downloads/extracted/fixture-source/data/ground.csv").exists()
 
 
-def test_archive_negative_controls(tmp_path):
+def test_adversarial_archive_negative_controls(tmp_path):
     for cap in ({"max_entries": 0}, {"max_expanded_bytes": 1}, {"max_member_bytes": 1}, {"max_expansion_ratio": .01}):
         record, raw, _ = source_archive(tmp_path, **cap)
         with pytest.raises(SourceError, match="limit"):
@@ -109,7 +110,7 @@ def test_archive_negative_controls(tmp_path):
         extract_selected(record, raw, root=tmp_path)
 
 
-def test_profile_preserves_correction_and_missingness(tmp_path):
+def test_adversarial_profile_preserves_correction_and_missingness(tmp_path):
     path = tmp_path / "observations.csv"
     text = io.StringIO(newline="")
     writer = csv.writer(text)
@@ -137,7 +138,7 @@ def test_profile_preserves_correction_and_missingness(tmp_path):
         profile_gravity(path, source=source)
 
 
-def test_profile_guide_and_real_source():
+def test_adversarial_profile_guide_and_real_source():
     guide = (ROOT / "docs/guides/11_potential_source_intake.md").read_text(encoding="utf-8")
     for term in ("CC BY 4.0", "NAD27", "IGSN1971", "vertical datum", "modelling_eligible", "potential_sources.py"):
         assert term in guide
@@ -146,16 +147,55 @@ def test_profile_guide_and_real_source():
         assert "potential_sources.py" in script and "GEOPHYSICS_INTAKE_PYTHON" in script
 
 
+def test_adversarial_cli_preserves_external_data_root(tmp_path, monkeypatch):
+    external = tmp_path / "external-data"
+    csv_text = io.StringIO(newline="")
+    writer = csv.writer(csv_text)
+    writer.writerow(HEADER)
+    writer.writerow(["0", "STA-01", -122, 38, 500000, 4200000, 100, 980000, 20, 10, 2, 12, 1])
+    member_bytes = csv_text.getvalue().encode("utf-8")
+    raw = tmp_path / "fixture.zip"
+    with zipfile.ZipFile(raw, "w", compression=zipfile.ZIP_DEFLATED) as archive:
+        archive.writestr("data/ground_gravity_data.csv", member_bytes)
+    record = {
+        "source_id": "fixture-source", "format": "research-zip", "expected_bytes": raw.stat().st_size,
+        "sha256": hashlib.sha256(raw.read_bytes()).hexdigest(), "rights_decision": "mirror",
+        "rights_statement": "Test fixture", "citation": "Synthetic test fixture",
+        "archive_contract": {
+            "max_entries": 4, "max_expanded_bytes": 10000, "max_member_bytes": 10000,
+            "max_expansion_ratio": 1000,
+            "selected_members": {"data/ground_gravity_data.csv": {
+                "bytes": len(member_bytes), "sha256": hashlib.sha256(member_bytes).hexdigest()}},
+        },
+    }
+
+    def acquire(source_id, *, local_file=None, root=None):
+        assert source_id == potential_sources.AUTHOR_SOURCE
+        assert root == external.resolve()
+        return record, raw, {}
+
+    monkeypatch.setattr(potential_sources, "acquire_source", acquire)
+    output = external / "data/raw/potential-source-intake/profile.json"
+    assert potential_sources.main([
+        "--data-root", str(external), "--file", str(raw), "--output", str(output),
+    ]) == 0
+    result = json.loads(output.read_text(encoding="utf-8"))
+    assert result["row_count"] == 1
+    assert result["modelling_eligible"] is False and result["inversion_performed"] is False
+    assert (external / "data/downloads/extracted/fixture-source/data/ground_gravity_data.csv").is_file()
+
+
 def test_real_local_source_intake():
     if os.environ.get("GEOPHYSICS_REAL_POTENTIAL_SOURCE") != "1":
         pytest.skip("explicit local archive gate only; no download in tests or CI")
     source = load_ledger()["clear-lake-author-potentials-v2"]
-    assert (ROOT / source["raw_path"]).is_file(), "Import the pinned ZIP with --file first; tests never fetch"
+    root = local_data_root()
+    assert (root / source["raw_path"]).is_file(), "Import the pinned ZIP with --file first; tests never fetch"
     record, raw, _ = acquire_source("clear-lake-author-potentials-v2")
     assert raw.stat().st_size == 121295137
-    receipt = extract_selected(record, raw)
+    receipt = extract_selected(record, raw, root=root)
     assert receipt["entry_count"] == 40 and receipt["expanded_bytes"] == 299907397
-    path = ROOT / next(item["path"] for item in receipt["members"] if item["name"] == "data/ground_gravity_data.csv")
+    path = root / next(item["path"] for item in receipt["members"] if item["name"] == "data/ground_gravity_data.csv")
     result = profile_gravity(path, source=record)
     assert result["row_count"] > 100
     assert not result["modelling_eligible"]

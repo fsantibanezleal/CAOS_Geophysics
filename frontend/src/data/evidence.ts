@@ -58,7 +58,7 @@ const reasons: Record<string, [string, string]> = {
   "magnetic-withheld-data-not-predicted": ["Withheld magnetic-station noise-normalized RMS exceeds the declared prediction threshold of 2.", "El RMS magnético normalizado por ruido en estaciones omitidas supera el umbral declarado de predicción de 2."],
   "held-out-geological-family": ["This geometric family was excluded from training.", "Esta familia geométrica se excluyó del entrenamiento."],
   "column-target-not-three-dimensional-recovery": ["Only depth-integrated columns are evaluated, not 3D recovery.", "Se evalúan columnas integradas, no recuperación 3D."],
-  "does-not-improve-classical-baseline": ["CNN column error does not improve the matched classical baseline.", "El error de columna CNN no mejora la referencia clásica comparable."],
+  "does-not-improve-classical-baseline": ["CNN column error does not improve the matched weighted L2 result.", "El error de columna CNN no mejora el resultado L2 comparable."],
   "withheld-geometric-family-detected": ["The withheld geometry exceeds the calibrated novelty threshold.", "La geometría omitida supera el umbral calibrado de novedad."],
   "withheld-geometric-family-missed": ["The withheld geometry is missed by the novelty detector.", "El detector de novedad no detecta la geometría omitida."],
   "case-score-not-calibrated-as-geology": ["A single display-case reconstruction score is not calibrated as geological detection or recovery.", "El puntaje de reconstrucción de un solo caso visualizado no está calibrado como detección ni recuperación geológica."],

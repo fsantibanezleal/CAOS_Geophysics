@@ -4,7 +4,7 @@ import pytest
 
 import numpy as np
 
-from phase_picking import classical_stalta_picks, evaluate_matched_picks
+from phase_picking import classical_stalta_picks, evaluate_matched_picks, stalta_characteristic
 
 
 def test_matched_inputs_and_failed_picks():
@@ -38,3 +38,17 @@ def test_classical_picker_does_not_use_reference_times():
     assert picked["P"] == pytest.approx(3.2, abs=0.1)
     assert picked["S"] == pytest.approx(6.8, abs=0.1)
     assert classical_stalta_picks(np.zeros_like(values), sample_interval_s=0.01) == {"P": None, "S": None}
+
+
+def test_stalta_characteristic_is_the_picker_curve_and_uses_trailing_sample_indices():
+    values = np.zeros((1024, 3), dtype=np.float32)
+    values[320:360, 2] = 1
+    values[680:730, 2] = 1.5
+    curve = stalta_characteristic(values, sample_interval_s=0.01)
+    assert curve.shape == (len(values),)
+    assert np.isfinite(curve).all()
+    assert np.all(curve[:119] == 0)
+    assert curve.max() > 2.5
+    picked = classical_stalta_picks(values, sample_interval_s=0.01, threshold=2.5)
+    expected = np.flatnonzero((curve[1:] >= 2.5) & (curve[:-1] < 2.5)) + 1
+    assert picked["P"] == pytest.approx(expected[0] * 0.01)

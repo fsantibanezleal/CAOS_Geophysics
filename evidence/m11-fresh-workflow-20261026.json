@@ -1,0 +1,62 @@
+{
+  "schema": "geophysics.m11-fresh-workflow-run/v1",
+  "run_date": "2026-10-26",
+  "source_revision": "9ee3406b0846ea3a33e09aea2d134bee0902307e",
+  "runtime": {
+    "platform": "Ubuntu 24.04 WSL2 x86_64",
+    "python": "CPython 3.12.10",
+    "compute": "CPU",
+    "gpu_used": false
+  },
+  "external_data_root": "E:\\_worktrees\\_runs\\CAOS_Geophysics-M11-integrated-20261025\\data",
+  "inputs": {
+    "development": "development/",
+    "sealed": "sealed/",
+    "rights_verified": false,
+    "source_bytes_verified": false,
+    "field_eligible": false
+  },
+  "workflow": {
+    "command": "scripts/run_joint_survey.py solve",
+    "receipt": "reproduced-output-20261026/workflow.json",
+    "receipt_sha256": "81bf2616fa107164520d7b71a32ac83df8fecd8bae4b21abd1f9cb9d75ca32fc",
+    "inverse_completed": true,
+    "sealed_evaluation_completed": true,
+    "field_eligible": false,
+    "public_activation": false,
+    "elapsed_seconds": 75.23942028300002,
+    "peak_sampled_rss_bytes": 420130816,
+    "peak_sampled_scratch_bytes": 69534
+  },
+  "workflow_validation": {
+    "command": "scripts/run_joint_survey.py validate",
+    "validated": true,
+    "physical_model_verified": true,
+    "field_eligible": false,
+    "elapsed_seconds": 88.51492453600002,
+    "peak_sampled_rss_bytes": 428060672,
+    "peak_sampled_scratch_bytes": 69534
+  },
+  "state_instrument": {
+    "command": "scripts/run_joint_instrument.py export and validate",
+    "output": "browser-instrument-20261026/",
+    "output_bytes": 5361054,
+    "validated": true,
+    "refit": false,
+    "scientific_acceptance_verified": false,
+    "public_activation": false,
+    "frozen_sha256": "bb805668f50a5d77773b936b3e3df11da2b90a4f1be0e1ebeef1208e5a5e1411",
+    "instrument_manifest_sha256": "70209cfcfccbdd2abaa541c0245a4ac8b402a86f681fa772fe5de23700762404",
+    "export_elapsed_seconds": 185.738918282,
+    "validation_elapsed_seconds": 185.87151154000003,
+    "peak_sampled_rss_bytes": 477437952,
+    "peak_sampled_scratch_bytes": 69534,
+    "source_epoch": "m11-linux-cpu-1"
+  },
+  "limits": [
+    "Synthetic control only",
+    "No source-rights or field-validity acceptance",
+    "No whole-product acceptance or public activation",
+    "No ML VPS execution or resource admission"
+  ]
+}

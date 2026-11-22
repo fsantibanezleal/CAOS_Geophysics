@@ -105,5 +105,5 @@
   <text x="823" y="611" class="small">Failure: keep the job and its diagnostic verdict.</text>
 
   <line x1="32" y1="651" x2="1168" y2="651" class="rule"/>
-  <text x="32" y="674" class="small">Current online scope: immutable raw intake, typed gravity-station observations, and flag-only QC. Other full methods require their own validated verticals.</text>
+  <text x="32" y="674" class="small">Branch methods include gravity flag QC and gated uploaded M02 inversion. The live release does not enable this API.</text>
 </svg>

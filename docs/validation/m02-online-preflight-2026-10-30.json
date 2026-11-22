@@ -1,0 +1,45 @@
+{
+  "schema": "geophysics.validation-receipt/v1",
+  "id": "m02-online-preflight-2026-10-30",
+  "recorded_at": "2026-10-30T16:33:04Z",
+  "source_revision": "221d031ca366410ca36066da37d302b9832008b1",
+  "working_tree_dirty": true,
+  "scope": "Focused local user-data execution and admission preflight only",
+  "commands": [
+    ".venv-api/Scripts/python.exe -m pytest -q tests/api/test_gravity_l2_upload.py::test_admission_memory_preflight_does_not_import_solver_engines tests/api/test_gravity_l2_upload.py::test_uploaded_user_survey_runs_isolated_inverse_and_parameter_changes_predictions tests/api/test_online_mt.py::test_inverse_parameter_effect_and_independent_oracle"
+  ],
+  "result": {
+    "passed": 3,
+    "failed": 0,
+    "skipped": 0,
+    "warning": "One upstream Starlette/httpx TestClient deprecation warning."
+  },
+  "coverage": [
+    "M02 uploaded, authenticated authored survey executed in the dedicated .venv-gravity worker; independent Choclo forward, parameter effect, held-out residual metrics, source preservation, and bundle round-trip checked by the test.",
+    "Admission allocation guard exercised without importing gravity_forward, gravity_l2, or gravity_survey_l2.",
+    "M05/M06 EDI parameter-effect test compared against its independent oracle."
+  ],
+  "environment": {
+    "api_python": "3.12.10",
+    "gravity_python": "3.12.10",
+    "api_test_requirements": "requirements-api-test.txt",
+    "gravity_runtime_requirements": "requirements-gravity-runtime.txt",
+    "gravity_thread_policy": "OPENBLAS_NUM_THREADS=1; OMP_NUM_THREADS=1; MKL_NUM_THREADS=1"
+  },
+  "source_sha256": {
+    "app/processing.py": "f824537d0e9863274341b065974d02e49a799035a1dbd5c3c13a6f77e7bc36af",
+    "app/gravity_l2_compute.py": "6b519ae0b731906dc1b127a77406d15ca6c54a84d7b85326fde60b8bdbc8859b",
+    "tests/api/test_gravity_l2_upload.py": "8a3688f8cf67ffcfc7b5c9a1ff78942479490964b8e21aa96900b51d3138fa90",
+    "tests/api/test_online_mt.py": "231485e1ca756b1d84e948cce78642123bee65b75ad499961bd414a841e0fbb6",
+    "requirements-api-test.txt": "8d4ff2dc191e6532745ffb2e9d6a2213e09f540af639b5251698e9ab14590e40",
+    "requirements-api.txt": "d6016b7962d8bb2017a2d07f904735bee8473d96bbc31b26e763645db797a7e4",
+    "requirements-gravity-runtime.txt": "f34ad3ea85ebb0e1127fa9d36bcf558517c3d09a209dff856f8d2a46fceedd0e",
+    "scripts/setup.ps1": "5562012aee4894cb1c580b248e266a8ac57eb5ac806fb7ced68fe68d517ccfb5",
+    "scripts/setup.sh": "ed55538d24dde7ad6e122c016e7986e72c0d8017d626f3e452140795086c5891"
+  },
+  "limitations": [
+    "Authored synthetic/local fixtures only; no field-geology acceptance.",
+    "No actual ML VPS admission, capacity, host runtime, browser acceptance, or deployment acceptance.",
+    "R-006 remains unresolved for the full supported method set; R-008 remains failed."
+  ]
+}

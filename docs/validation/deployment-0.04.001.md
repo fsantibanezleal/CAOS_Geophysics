@@ -1,5 +1,7 @@
 # Public deployment verification: 0.04.001
 
+> Historical record only. This 2026-09-26 receipt documents a former two-host release. The current product has one deployment origin on the ML VPS. Retained Pages receipts and captures are archival provenance, not active deployments or application links. See [current deployment status](deployment.md).
+
 Verified 2026-09-26 after the corrected main integration `280b6f2a9e2cee6c3aae41f612b976711b13aa45`. Product reviews were [#26](https://github.com/fsantibanezleal/CAOS_Geophysics/pull/26) (task to develop), [#27](https://github.com/fsantibanezleal/CAOS_Geophysics/pull/27) (develop to main), and the release-byte correction [#28](https://github.com/fsantibanezleal/CAOS_Geophysics/pull/28)/[#29](https://github.com/fsantibanezleal/CAOS_Geophysics/pull/29). Corrected develop CI [36280635285](https://github.com/fsantibanezleal/CAOS_Geophysics/actions/runs/36280635285), main CI [36280718029](https://github.com/fsantibanezleal/CAOS_Geophysics/actions/runs/36280718029), and Pages [36280718069](https://github.com/fsantibanezleal/CAOS_Geophysics/actions/runs/36280718069) succeeded.
 
 The corrected ML VPS immutable release is `/var/www/geophysics.ml.fasl-work.com/releases/20260926235216`; Nginx syntax validation and reload succeeded. The earlier 0.04.001 upload at `releases/20260926233737` and the 0.04.000 release at `releases/20260926200023` remain available for recovery. The VPS is a static artifact host; it does not perform public GPU inversion.

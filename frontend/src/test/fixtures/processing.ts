@@ -7,7 +7,9 @@ export const digest = (bytes: Uint8Array) => createHash("sha256").update(bytes).
 export const bytes = (object: unknown) => strToU8(JSON.stringify(object));
 export function fixture() {
   const dataset: GravityDataset = {
-    schema: "geophysics.observation-dataset/v1", dataset_id: id(3), version: 1, owner_id: id(1), project_id: id(2), raw_asset_id: id(4), parent_raw_sha256: "a".repeat(64),
+    schema: "geophysics.observation-dataset/v1", dataset_id: id(3), version: 1, owner_id: id(1), project_id: id(2), raw_asset_id: id(4), parent_raw_sha256: "a".repeat(64), parent_raw_bytes: 120,
+    raw_columns: ["station", "x", "y", "z", "g", "sigma"], partition_group_ids: [],
+    source: {source_id: id(6), provider: "QA owner", exact_url: null, doi: null, citation: null, retrieved_at: null, rights_decision: "provider-link-only", rights_statement: "Private test control", attribution: "Independent test control"},
     parser_version: "gravity-station-csv/v1", modality: "gravity_station", dimensions: {station: 5}, axis_order: ["station"], station_ids: ["S1", "S2", "S3", "S4", "S5"],
     xyz_m: [[500000, 6200000, 100], [500010, 6200010, 101], [500020, 6200000, 100], [500030, 6200010, 100], [500040, 6200000, 100]],
     observed_mgal: [1, 2, 3, 4, 100], sigma_mgal: [.1, .1, .1, .1, .1], uncertainty_kind: "per_station_standard_deviation", mask: [false,false,false,false,false], missing_reasons: [null,null,null,null,null],

@@ -246,7 +246,7 @@ other-method controls and host HTTP success cannot accept this local M02 lane.
 
 | Owner | After separate implementation approval | Explicit exclusions |
 | --- | --- | --- |
-| M02 worker | New `data-pipeline/gravity_survey.py`, `gravity_inverse.py`, `gravity_inverse_bundle.py`, `gravity_inverse_controls.py`; paired local CLI scripts; new tests named in validation; local method docs | Existing potential/spatial/ingest physics, canonical data and gates remain unchanged unless separately authorized |
+| M02 worker | Current path: `data-pipeline/gravity_survey_l2.py`, `gravity_l2.py`, and `gravity_irls_corrected.py`, with separate survey and calibration tests; unresolved bundle and host acceptance remain tracked in validation | Existing potential/spatial/ingest physics, canonical data and gates remain unchanged unless separately authorized |
 | M01/reference owner | Review correction/height/CRS and derivative seams, datum-grid availability and provider mappings | No inferred Bartlett heights/errors, no converting equivalent sources into density |
 | Main integration | Shared API/job/auth/storage/registry/processing contracts, upload adapter, UI/course/wiki integration, version/ledger/canonical/release, dependency coordination and actual-host admission | Not implemented by this docs sidecar |
 | Independent reviewer | Primary evidence, frozen gate review, independent controls/replay and resource/field receipts | Author self-review does not replace independent acceptance |

@@ -1,5 +1,5 @@
 import { test, expect, type BrowserContext, type Page, type APIRequestContext } from "@playwright/test";
-import { mkdirSync } from "node:fs";
+import { mkdirSync, writeFileSync } from "node:fs";
 import { resolve } from "node:path";
 import { execFileSync } from "node:child_process";
 import { createHash } from "node:crypto";
@@ -40,10 +40,21 @@ test.beforeAll(async ({browser}) => {
   const {token} = await (await context.request.get(origin+"/__qa/mail/latest")).json();
   expect((await unsafe(context.request,"/api/auth/verify/verify",{token})).ok()).toBe(true);
 });
-test.afterAll(async () => {await context?.close();});
+test.afterAll(async () => {
+  try {
+    if (context) {
+      const stopped = await context.request.post(origin+"/__qa/shutdown");
+      expect(stopped.ok(), await stopped.text()).toBe(true);
+    }
+  } finally {
+    await context?.close();
+  }
+});
 
 test("owner upload to flag result and verified export", async () => {
-  await page.goto(origin+"/"); await page.getByRole("button",{name:"Projects & raw data",exact:true}).click();
+  await page.goto(origin+"/app");
+  await page.getByRole("button",{name:"Experiment controls",exact:true}).click();
+  await page.getByRole("button",{name:"Projects & raw data",exact:true}).click();
   await page.getByLabel("Email",{exact:true}).fill(email); await page.getByLabel("Password",{exact:true}).fill(password); await page.getByRole("button",{name:"Sign in",exact:true}).click();
   await page.getByLabel("Project name",{exact:true}).fill("Five-station QC control"); await page.getByLabel("Description",{exact:true}).fill("Independent QA, not a scientific benchmark");
   await page.getByRole("button",{name:"Create project",exact:true}).click();
@@ -106,7 +117,114 @@ test("invalid rows and failed processing remain non-success", async () => {
   await combo("Validated dataset").selectOption(datasetId); await combo("Processing job").selectOption(successJob); await expect(page.getByTestId("qc-summary")).toBeVisible();
 });
 
+test("authored prism upload runs the isolated M02 solver and renders its returned result", async () => {
+  test.setTimeout(12 * 60_000);
+  const identity = await (await context.request.get(origin + "/__qa/processing")).json();
+  expect(identity.m02_enabled).toBe(true);
+  const source = await (await context.request.get(origin + "/__qa/m02-prism-survey")).json();
+  expect(source.oracle).toBe("Choclo prism gravity_u");
+  const body = Buffer.from(source.csv, "utf8");
+  expect(createHash("sha256").update(body).digest("hex")).toBe(source.sha256);
+  const csrf = await (await context.request.get(origin + "/api/auth/csrf")).json();
+  const uploaded = await context.request.post(origin + `/api/projects/${projectId}/assets`, {
+    headers: {Origin: origin, "X-CSRF-Token": csrf.csrf_token,
+      "Content-Type": "text/csv", "X-Asset-Metadata": JSON.stringify(source.metadata)}, data: body,
+  });
+  expect(uploaded.ok(), await uploaded.text()).toBe(true);
+  const assetId = (await uploaded.json()).asset_id as string;
+  const storedAsset = await (await context.request.get(origin + `/api/projects/${projectId}/assets/${assetId}`)).json();
+  expect(storedAsset.physical_metadata.geometry.ordinary_l2).toBeTruthy();
+
+  await section("data");
+  await page.getByRole("button", {name: "Refresh project data", exact: true}).click();
+  await combo("Stored original").selectOption(assetId);
+  const previousDatasetId = await combo("Validated dataset").inputValue();
+  await page.getByRole("button", {name: "Validate station table", exact: true}).click();
+  await expect(combo("Validated dataset")).not.toHaveValue(previousDatasetId);
+  const datasetId = await combo("Validated dataset").inputValue();
+  const methodsResponse = await context.request.get(origin + `/api/projects/${projectId}/datasets/${datasetId}/methods`);
+  expect(methodsResponse.ok(), await methodsResponse.text()).toBe(true);
+  const methods = await methodsResponse.json();
+  const m02 = methods.methods.find((item: {method_id: string}) => item.method_id === "gravity.survey-l2-ordinary/v1")
+    ?? methods.unavailable.find((item: {method_id: string}) => item.method_id === "gravity.survey-l2-ordinary/v1");
+  expect(m02).toMatchObject({method_id: "gravity.survey-l2-ordinary/v1", eligible: true, lane: "online_cpu"});
+  await page.waitForTimeout(500);
+  const uiAlerts = await page.getByRole("alert").allTextContents();
+  if (uiAlerts.length) throw new Error(`Workbench dataset/eligibility load: ${JSON.stringify(uiAlerts)}`);
+  await expect(page.getByTestId("method-eligibility")).toContainText("Eligible: flag-only statistical QC");
+  await combo("API method verdict").selectOption("gravity.survey-l2-ordinary/v1");
+  await expect(page.getByTestId("method-eligibility")).toContainText("Eligible by API");
+  expect((await context.request.post(origin + "/__qa/worker/start")).ok()).toBe(true);
+  await page.getByRole("button", {name: "Submit ordinary-L2 job", exact: true}).click();
+  await expect(page.getByTestId("job-status")).toHaveText("Succeeded", {timeout: 10 * 60_000});
+  await expect(page.getByTestId("gravity-l2-result")).toBeVisible({timeout: 60_000});
+  await expect(page.getByRole("heading", {name: /Recovered density contrast/})).toBeVisible();
+  await expect(page.getByRole("heading", {name: /Predicted response/})).toBeVisible();
+  await expect(page.getByRole("heading", {name: /Held-out residuals/})).toBeVisible();
+  await expect(page.locator("canvas").first()).toBeVisible();
+  const volumeBounds = await page.getByTestId("gravity-density-volume").boundingBox();
+  expect(volumeBounds?.height).toBeGreaterThanOrEqual(400);
+  const jobId = await combo("Ordinary weighted-L2 job").inputValue();
+  const returned = await (await context.request.get(origin + `/api/projects/${projectId}/jobs/${jobId}/result`)).json();
+  expect(returned.gravity_l2.calibration.final_solve.status).toBe("converged");
+  expect(returned.gravity_l2.outer_evaluation.rows.data.length).toBeGreaterThan(0);
+  expect(returned.gravity_l2.scope.host_accepted).toBe(false);
+  expect(datasetId).toBe(returned.dataset_id);
+  const jobReceipt = await (await context.request.get(origin + `/api/projects/${projectId}/jobs/${jobId}`)).json();
+  expect(jobReceipt.state).toBe("succeeded");
+  expect(jobReceipt.wall_ms).toBeGreaterThan(0);
+  expect(jobReceipt.peak_rss_bytes).toBeGreaterThan(0);
+  expect(jobReceipt.peak_rss_bytes).toBeLessThanOrEqual(jobReceipt.preflight.memory_limit_bytes);
+  expect(jobReceipt.scratch_bytes).toBeLessThanOrEqual(jobReceipt.preflight.scratch_limit_bytes);
+  writeFileSync(resolve(evidence, "m02-uploaded-prism-receipt.json"), JSON.stringify({
+    schema: "geophysics.qa.m02-uploaded-browser/v1", source_sha256: source.sha256,
+    dataset_sha256: jobReceipt.dataset_sha256, request_sha256: jobReceipt.request_sha256,
+    result_sha256: jobReceipt.result_sha256, calibration_sha256: returned.gravity_l2.calibration_native_sha256,
+    evaluation_sha256: returned.gravity_l2.evaluation_native_sha256,
+    station_count: returned.gravity_l2.plan.geometry.receivers_m.shape[0],
+    withheld_station_count: returned.gravity_l2.outer_evaluation.rows.data.length,
+    active_cells: returned.gravity_l2.plan.geometry.active_cell_indices.data.length,
+    fit_status: returned.gravity_l2.calibration.final_solve.status,
+    measured: {wall_ms: jobReceipt.wall_ms, peak_rss_bytes: jobReceipt.peak_rss_bytes,
+      scratch_bytes: jobReceipt.scratch_bytes, limits: jobReceipt.preflight},
+    field_eligible: returned.gravity_l2.scope.field_eligible,
+    full_M02_accepted: returned.gravity_l2.scope.full_M02_accepted,
+    host_accepted: returned.gravity_l2.scope.host_accepted,
+  }, null, 2));
+  const [download] = await Promise.all([page.waitForEvent("download"),
+    page.getByRole("button", {name: "Verify & export M02 ZIP", exact: true}).click()]);
+  const zip = resolve(evidence, "m02-uploaded-prism-export.zip");
+  await download.saveAs(zip);
+  const verified = execFileSync(resolve("../.venv-api/Scripts/python.exe"), ["-c",
+    "import sys,json; from pathlib import Path; from app.bundle import verify_bundle; print(json.dumps(verify_bundle(Path(sys.argv[1]).read_bytes())))",
+    zip], {cwd: resolve(".."), encoding: "utf8"});
+  expect(JSON.parse(verified)).toBeTruthy();
+  await page.screenshot({path: resolve(evidence, "m02-uploaded-prism-result.png"), fullPage: true});
+  const instrument = page.getByTestId("gravity-l2-result");
+  const stateSlider = instrument.locator('input[type="range"]').first();
+  const frameMaximum = Number(await stateSlider.getAttribute("max"));
+  expect(frameMaximum).toBeGreaterThan(0);
+  await stateSlider.focus();
+  await stateSlider.press("End");
+  await expect(instrument).toContainText(`Accepted state ${frameMaximum + 1} / ${frameMaximum + 1}`);
+  const volume = page.locator("[data-testid=gravity-density-volume] canvas");
+  const terminalImage = await volume.screenshot();
+  writeFileSync(resolve(evidence, "m02-terminal-density-frame.png"), terminalImage);
+  const terminalMetric = await instrument.locator("p.project-note").filter({hasText: "normalized KKT"}).textContent();
+  await stateSlider.press("Home");
+  await expect(instrument).toContainText("Accepted state 1 /");
+  await expect.poll(async () => (await instrument.locator("p.project-note").filter({hasText: "normalized KKT"}).textContent()) ?? "")
+    .not.toBe(terminalMetric ?? "");
+  const initialImage = await volume.screenshot();
+  writeFileSync(resolve(evidence, "m02-initial-density-frame.png"), initialImage);
+  expect(initialImage.equals(terminalImage)).toBe(false);
+});
+
 test("linked station controls and viewport fit", async () => {
+  // The preceding serial case leaves its M02 inverse selected in Job history.
+  // Restore the five-station QC result this viewport test actually inspects.
+  await section("data"); await combo("Validated dataset").selectOption(datasetId);
+  await section("history"); await combo("Processing job").selectOption(successJob);
   await combo("Selected station").selectOption("4"); await expect(page.getByTestId("station-readout")).toContainText("S5");
   const plan = page.getByRole("img",{name:"Station geometry",exact:true}); await plan.focus(); await plan.press("ArrowLeft"); await expect(page.getByTestId("station-readout")).toContainText("S4");
   const measurement = page.getByRole("img",{name:"Observed gravity and σ",exact:true});
@@ -127,10 +245,12 @@ test("linked station controls and viewport fit", async () => {
   await page.getByRole("button",{name:"Show plots",exact:true}).click();
   for (const lang of ["en","es"]) for (const theme of ["light","dark"]) for (const [width,height] of [[1280,800],[1600,900],[2560,1440],[390,844]]) {
     await page.setViewportSize({width,height}); await page.evaluate(({lang,theme}) => {localStorage.setItem("caos.lang",lang); localStorage.setItem("caos.theme",theme);}, {lang,theme});
-    await page.reload(); await expect(page.getByTestId("processing-instrument")).toBeVisible();
+    await page.reload();
     if (width <= 760) await page.getByRole("button",{name:lang === "es" ? "Controles de procesamiento" : "Processing controls",exact:true}).click();
     await combo(lang === "es" ? "Conjunto validado" : "Validated dataset").selectOption(datasetId);
-    await combo(lang === "es" ? "Sección de controles" : "Control section").selectOption("history"); await combo(lang === "es" ? "Trabajo de procesamiento" : "Processing job").selectOption(successJob);
+    await combo(lang === "es" ? "Sección de controles" : "Control section").selectOption("history");
+    await combo(lang === "es" ? "Trabajo de procesamiento" : "Processing job").selectOption(successJob);
+    await expect(page.getByTestId("processing-instrument")).toBeVisible();
     if (width <= 760) await page.getByRole("button",{name:lang === "es" ? "Controles de procesamiento" : "Processing controls",exact:true}).click();
     await expect(page.getByTestId("qc-summary")).toBeVisible();
     await expect(page.locator("html")).toHaveAttribute("data-theme",theme);

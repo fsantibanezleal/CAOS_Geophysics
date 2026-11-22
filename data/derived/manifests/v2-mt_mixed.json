@@ -1,0 +1,36 @@
+{
+  "schema": "caos.declared-artifacts/v1",
+  "case_id": "MT_MIXED",
+  "artifacts": [
+    {
+      "path": "v2/MT_MIXED/reference.json",
+      "bytes": 68811,
+      "sha256": "7efb833d7bd42d23a8bbba7948331b8759c14add2afbfa3844bc521fa0a75c3e"
+    },
+    {
+      "path": "v2/MT_MIXED/contrast.json",
+      "bytes": 69902,
+      "sha256": "e2f418c17b0e1800469e12cbf1856b1c23231f3bb16c823b96c6ddda57371307"
+    },
+    {
+      "path": "v2/MT_MIXED/noise.json",
+      "bytes": 69858,
+      "sha256": "1780e37a7a7053c30eea372cd03548d773c84fb311a36cfccfb459b7c3517beb"
+    },
+    {
+      "path": "v2/MT_MIXED/acquisition.json",
+      "bytes": 69571,
+      "sha256": "f92f5a228b26e5ca240664962418f9fe706d5f60019d387ed4878b8a46667790"
+    },
+    {
+      "path": "v2/MT_MIXED/coverage.json",
+      "bytes": 70777,
+      "sha256": "01209518be7e2be9a369ef5df0ac80c5809d07782421158d55e8cbc92fc445d9"
+    },
+    {
+      "path": "v2/MT_MIXED/regularization.json",
+      "bytes": 68328,
+      "sha256": "932bb1c7d4a87b32f9689fc016b1e2485be259ef02d5d394f5ed51e2445bf8ac"
+    }
+  ]
+}

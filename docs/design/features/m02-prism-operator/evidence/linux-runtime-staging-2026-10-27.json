@@ -1,0 +1,80 @@
+{
+  "schema": "geophysics.gravity-linux-runtime-staging-profile/v1",
+  "executed_utc": "2026-10-27",
+  "scope": "isolated local Linux gravity-runtime install profile; not a VPS release stage",
+  "environment": {
+    "python": "3.12.10",
+    "platform": "Ubuntu 24.04 WSL2 x86_64",
+    "requirements_sha256": "f34ad3ea85ebb0e1127fa9d36bcf558517c3d09a209dff856f8d2a46fceedd0e",
+    "linux_runtime_pin_manifest_sha256": "c299d0556330658bd69175d841b18fbbcaf2c239ac919e859375dbf487d2bbef"
+  },
+  "install_profile": {
+    "command_policy": "pip --isolated --no-cache-dir --only-binary=:all: --no-binary=simpeg,pymatsolver --index-url https://pypi.org/simple -r requirements-gravity-runtime.txt",
+    "status": "pass",
+    "native_dependencies_wheel_only": true,
+    "source_build_allowlist": ["simpeg", "pymatsolver"],
+    "full_immutable_release_stage_executed": false
+  },
+  "installed_runtime_audit": {
+    "schema": "geophysics.gravity-linux-runtime-verification/v1",
+    "source_epoch": "m02-prism-linux-cpu-1",
+    "python": "3.12.10",
+    "machine": "x86_64",
+    "package_versions": {
+      "SQLAlchemy": "2.0.54",
+      "aiosqlite": "0.22.1",
+      "choclo": "0.3.2",
+      "discretize": "0.12.0",
+      "fastapi": "0.141.1",
+      "fastapi-users": "15.0.5",
+      "fastapi-users-db-sqlalchemy": "7.0.0",
+      "geoana": "0.8.1",
+      "llvmlite": "0.49.0",
+      "mt-metadata": "1.0.10",
+      "numba": "0.67.0",
+      "numpy": "2.2.6",
+      "pandas": "2.2.3",
+      "pydantic": "2.13.5",
+      "pymatsolver": "0.4.0",
+      "scipy": "1.15.2",
+      "simpeg": "0.25.2"
+    },
+    "installed_source_files_verified": 21,
+    "pure_python_wheels": {
+      "pymatsolver": "py3-none-any",
+      "simpeg": "py3-none-any"
+    },
+    "requirements_sha256": "f34ad3ea85ebb0e1127fa9d36bcf558517c3d09a209dff856f8d2a46fceedd0e",
+    "runtime_pin_manifest_sha256": "c299d0556330658bd69175d841b18fbbcaf2c239ac919e859375dbf487d2bbef",
+    "pip_check": "pass",
+    "ml_vps_host_admitted": false,
+    "public_activation": false
+  },
+  "test_runs": [
+    {
+      "command": "python -m pytest tests/numerics/test_gravity_forward.py -o addopts= -q -p no:cacheprovider",
+      "passed": 80,
+      "skipped": 0,
+      "result": "pass"
+    },
+    {
+      "command": "python -m pytest tests/numerics/test_gravity_forward.py tests/data/test_potential_sources.py tests/test_rebuild.py -k 'gravity_forward or potential_sources or gravity_independent_prism or inverse_improves_data_fit or ingest_rejects_invalid or user_csv_inverse' -o addopts= -q -p no:cacheprovider",
+      "passed": 118,
+      "skipped": 2,
+      "deselected": 11,
+      "native_threads": 1,
+      "result": "pass"
+    },
+    {
+      "command": "python -m pytest tests/ops/test_service_runtime.py -o addopts= -q -ra",
+      "passed": 41,
+      "skipped": 5,
+      "skip_reason": "actual Linux installer process-group control cannot run on Windows",
+      "result": "pass"
+    }
+  ],
+  "release_acceptance": {
+    "ml_vps_host_admitted": false,
+    "release_accepted": false
+  }
+}

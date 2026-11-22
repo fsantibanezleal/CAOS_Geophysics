@@ -1,5 +1,6 @@
 """Slagdump source identity, strict physical parse and rights boundary."""
 import hashlib
+import os
 from pathlib import Path
 import subprocess
 
@@ -10,7 +11,8 @@ from ert import ERTError, Survey, parse_ohm, qc
 from sources import acquire_source, load_ledger
 
 ROOT = Path(__file__).resolve().parents[2]
-RAW = ROOT / "data/downloads/pygimli/slagdump.ohm"
+DATA_ROOT = Path(os.environ.get("GEOPHYSICS_LOCAL_DATA_ROOT", ROOT))
+RAW = DATA_ROOT / "data/downloads/pygimli/slagdump.ohm"
 
 
 def _synthetic_ohm() -> str:
@@ -95,5 +97,8 @@ def test_qc_and_absent_reciprocals(tmp_path):
 def test_m07_documented_boundaries():
     guide = (ROOT / "docs/guides/05_sources.md").read_text(encoding="utf-8")
     design = (ROOT / "docs/design/features/m07-slagdump-ert/design.md").read_text(encoding="utf-8")
+    convergence = (ROOT / "docs/design/features/m07-slagdump-ert/convergence.md").read_text(encoding="utf-8")
     for term in ("Slagdump", "BGR", "reciprocal", "held-out", "pyGIMLi", "provider-link-only"):
         assert term in guide and term in design
+    for term in ("provenance", "rights", "holdouts", "limitations", "analytic-only run"):
+        assert term.lower() in convergence.lower()

@@ -1,6 +1,7 @@
 """Pinned Koenigsee identity, strict pick parsing and rights-contained QC."""
 
 import hashlib
+import os
 from pathlib import Path
 import subprocess
 
@@ -11,7 +12,8 @@ from sources import acquire_source, load_ledger
 from traveltime import Survey, TraveltimeError, parse_sgt, qc
 
 ROOT = Path(__file__).resolve().parents[2]
-RAW = ROOT / "data/downloads/pygimli/koenigsee.sgt"
+DATA_ROOT = Path(os.environ.get("GEOPHYSICS_LOCAL_DATA_ROOT", ROOT))
+RAW = DATA_ROOT / "data/downloads/pygimli/koenigsee.sgt"
 
 
 def _synthetic_sgt() -> str:
@@ -99,7 +101,10 @@ def test_m09_documented_boundaries():
     guide = (ROOT / "docs/guides/05_sources.md").read_text(encoding="utf-8")
     design = (ROOT / "docs/design/features/m09-koenigsee-traveltime/design.md").read_text(encoding="utf-8")
     theory = (ROOT / "docs/problem-types/traveltime-recovery.md").read_text(encoding="utf-8")
+    convergence = (ROOT / "docs/design/features/m09-koenigsee-traveltime/convergence.md").read_text(encoding="utf-8")
     for term in ("Koenigsee", "provider-link-only", "held-out", "reciprocal", "pyGIMLi"):
         assert term in guide and term in design and term in theory
     for term in ("eikonal", "homogeneous", "uncertainty", "coverage"):
         assert term in theory
+    for term in ("source/rights", "provider-based", "within-profile", "does not establish"):
+        assert term in convergence

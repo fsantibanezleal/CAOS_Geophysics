@@ -11,7 +11,7 @@ from app.worker import run_one
 from tests.api.conftest import PROCESSED_GRAVITY_CSV
 
 
-def test_real_flag_qc_and_parameter_effect(harness):
+def test_adversarial_real_flag_qc_and_parameter_effect(harness):
     harness.account()
     project = harness.project()
     asset, dataset = harness.processed_dataset(project["id"])

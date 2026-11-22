@@ -1,0 +1,23 @@
+{
+  "schema": "caos.m08-original-selection-seal.v1",
+  "authority": "MAIN explicit 2026-10-03 initial implementation and private exact-query acquisition",
+  "reviewed_packet": "d295925819a3c777c0e686aa9cce83d697678019",
+  "event_id": "38457511",
+  "channels": [{"network": "CI", "station": "GSC", "location": "", "channel": "HNZ"}],
+  "conditioning_start_utc": "2019-07-06T03:19:20Z",
+  "conditioning_end_utc": "2019-07-06T03:22:20Z",
+  "analysis_start_utc": "2019-07-06T03:19:40Z",
+  "analysis_end_utc": "2019-07-06T03:21:40Z",
+  "representation": "unrestituted_integer_counts",
+  "adc_rails": [null],
+  "processing": {"output":"native","prefilter_hz":[0.5,1.0,12.0,15.0],"water_level_db":60.0,"taper_fraction":0.05,"bandpass_hz":[1.0,10.0],"filter_order":4,"filter_mode":"offline-zero-phase","edge_guard_s":10.0,"sta_s":0.2,"lta_s":2.0,"threshold_on":3.5,"threshold_off":1.5,"refractory_s":1.0,"welch_segment_samples":1024},
+  "queries": {
+    "stationxml": {"url":"https://service.scedc.caltech.edu/fdsnws/station/1/query?net=CI&sta=GSC&loc=--&cha=HNZ&starttime=2019-07-06T03:19:20&endtime=2019-07-06T03:22:20&level=response&format=xml&nodata=404","cap_bytes":2097152},
+    "availability": {"url":"https://service.scedc.caltech.edu/fdsnws/availability/1/query?net=CI&sta=GSC&loc=--&cha=HNZ&starttime=2019-07-06T03:19:20&endtime=2019-07-06T03:22:20&format=text&nodata=404","cap_bytes":65536},
+    "miniseed": {"url":"https://service.scedc.caltech.edu/fdsnws/dataselect/1/query?net=CI&sta=GSC&loc=--&cha=HNZ&starttime=2019-07-06T03:19:20&endtime=2019-07-06T03:22:20&nodata=404","cap_bytes":16777216}
+  },
+  "phase_access": "HELD until immutable prediction or original QC outcome seal",
+  "original_publication": "HELD pending actual per-object MAIN review",
+  "field_truth": null,
+  "host_admitted": false
+}

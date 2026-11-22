@@ -17,6 +17,24 @@ from app.config import Settings
 from app.models import RateWindow
 
 
+class _SecurityGuard:
+    """Same-task ASGI guard; retain outer writer exclusion through authentication.
+
+    BaseHTTPMiddleware launches the route in another task, which cannot borrow
+    the native lease owner's descriptor authority. The policy below is unchanged.
+    """
+    def __init__(self, app, *, guard):
+        self.app = app
+        self.guard = guard
+
+    async def __call__(self, scope, receive, send):
+        if scope['type'] == 'http':
+            response = await self.guard(Request(scope, receive=receive))
+            if response is not None:
+                return await response(scope, receive, send)
+        await self.app(scope, receive, send)
+
+
 def _origin(value: str) -> str:
     parsed = urlsplit(value)
     if parsed.scheme not in ("http", "https") or not parsed.netloc:
@@ -38,11 +56,10 @@ def install_security(app: FastAPI, settings: Settings) -> None:
         response.headers["Cache-Control"] = "no-store"
         return response
 
-    @app.middleware("http")
-    async def guard(request: Request, call_next):
+    async def guard(request: Request):
         path = request.url.path
         if not path.startswith("/api/"):
-            return await call_next(request)
+            return None
         if request.method in ("POST", "PUT", "PATCH", "DELETE"):
             source = request.headers.get("origin") or request.headers.get("referer", "")
             if _origin(source) != settings.public_origin or request.headers.get("sec-fetch-site") == "cross-site":
@@ -88,4 +105,6 @@ def install_security(app: FastAPI, settings: Settings) -> None:
                 response = JSONResponse({"code": "rate_limited", "message": "Retry after the rate window"}, status_code=429)
                 response.headers["Retry-After"] = str(bucket + window - now)
                 return response
-        return await call_next(request)
+        return None
+
+    app.add_middleware(_SecurityGuard, guard=guard)

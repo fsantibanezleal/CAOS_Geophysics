@@ -1,0 +1,13 @@
+# M13 browser picker requirements
+
+Status: live
+
+Scope: browser-side execution of the frozen phase picker, with strict trace and model contracts. Runtime parity and input validation do not establish independent model accuracy or authorize deployment.
+
+| ID | EARS requirement | Named failing gate |
+| --- | --- | --- |
+| MTHIRTEENB-001 | WHEN a local trace is supplied, THE browser parser SHALL require the declared sample rate, duration, E/N/Z component identities, finite unfilled samples and an explicit raw-counts or normalized representation; unsupported rates, gaps, duplicate components, clipped or flat channels, and normalized channels without unit peak SHALL be rejected before model input. | `frontend/src/test/phase-browser-contract.test.ts::adversarial: rejects unsupported rate, component ambiguity, gaps and filled/flat channels`; `frontend/src/test/phase-browser-contract.test.ts::adversarial: rejects a declared normalized channel that does not have unit peak` |
+| MTHIRTEENB-002 | WHEN the ONNX runtime returns a score tensor, THE browser SHALL reject nonfinite, out-of-range or class-sum-invalid probabilities before peak selection and SHALL apply the declared P/S thresholds and minimum-spacing abstention rule. | `frontend/src/test/phase-browser-contract.test.ts::adversarial: rejects invalid probability output before global peaks and S abstention` |
+| MTHIRTEENB-003 | WHEN the curated manifest is loaded, THE browser SHALL reject duplicate identities or waveform bytes assigned to a QC-rejected record and SHALL verify model, benchmark and waveform bytes against their declared hashes before use. | `frontend/src/test/phase-browser-contract.test.ts::adversarial: rejects duplicate trace identities and waveform bytes added to a QC-rejected row`; `frontend/scripts/verify-phase-browser-parity.mjs` |
+| MTHIRTEENB-004 | WHEN a served model or held-out waveform differs from its manifest digest, THE browser SHALL reject the bytes without producing scores; the independent parity command SHALL compare current-manifest browser results against the frozen PyTorch oracle under its declared probability and pick tolerances. | `frontend/src/test/phase-browser-contract.test.ts::adversarial: refuses a fetched model when its bytes differ from the manifest digest`; `frontend/scripts/verify-phase-browser-parity.mjs` |
+| MTHIRTEENB-005 | WHEN a local trace violates the input contract, THE Benchmark interface SHALL show the specific rejection and keep inference and export disabled; a QC-rejected curated selection SHALL remain inspectable without running inference or silently selecting another trace. | `frontend/e2e/phase-picker-live.spec.ts::adversarial: an unsupported local trace is explained and cannot enter inference` |

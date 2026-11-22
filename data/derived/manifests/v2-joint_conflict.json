@@ -1,0 +1,36 @@
+{
+  "schema": "caos.declared-artifacts/v1",
+  "case_id": "JOINT_CONFLICT",
+  "artifacts": [
+    {
+      "path": "v2/JOINT_CONFLICT/reference.json",
+      "bytes": 7948915,
+      "sha256": "c915c5a098dd7bdb3f561c34866080f1c2e9b7ab9029c67fbc4b2b791e65c0b7"
+    },
+    {
+      "path": "v2/JOINT_CONFLICT/contrast.json",
+      "bytes": 7881344,
+      "sha256": "6d85b62690eb6858cfb465f116071bfc335e625eecac15362d1d21bb269b9314"
+    },
+    {
+      "path": "v2/JOINT_CONFLICT/noise.json",
+      "bytes": 7907218,
+      "sha256": "535ad2e3fb07d9d37994f6b303e0646820ce5d6f96a01a3f0e466671ae1a73b7"
+    },
+    {
+      "path": "v2/JOINT_CONFLICT/acquisition.json",
+      "bytes": 7951294,
+      "sha256": "ee29da5d1f83297bf317873110d86d6c8a32f5407bd33142a31e191eba508566"
+    },
+    {
+      "path": "v2/JOINT_CONFLICT/coverage.json",
+      "bytes": 7954841,
+      "sha256": "78fd431f405d27dee52bc61ec17faa673440cdbd6c9851858de548e196c06a41"
+    },
+    {
+      "path": "v2/JOINT_CONFLICT/regularization.json",
+      "bytes": 7937684,
+      "sha256": "1532c4e7d83a65827ffb86a508e5e014ff7ff157b2a05a62a1f12ba8b8d027e9"
+    }
+  ]
+}

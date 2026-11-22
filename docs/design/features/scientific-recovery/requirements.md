@@ -20,4 +20,4 @@ R-S08 THE learning comparison SHALL use identical noisy observations and identic
 
 R-S09 WHEN comparing target and reconstruction, THE UI SHALL share physical scales and thresholds and expose final versus replay state explicitly. Gate: `frontend/src/test/recovery.test.ts` and recorded rendered comparisons in both languages/themes.
 
-R-S10 THE release SHALL distinguish recovered, unresolved, failed and expected-negative-control outcomes using explicit criteria, without hiding missing methods or substituting data fit for recovery. Gate: `scripts/validate_recovery.py`, `scripts/check_artifacts.py`, six-route rendered QA and exact external artifact verification on both hosts.
+R-S10 THE release SHALL distinguish recovered, unresolved, failed and expected-negative-control outcomes using explicit criteria, without hiding missing methods or substituting data fit for recovery. Gate: `scripts/validate_recovery.py`, `scripts/check_artifacts.py`, six-route rendered QA, and exact artifact verification against the sole ML VPS origin.

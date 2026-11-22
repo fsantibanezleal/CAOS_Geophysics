@@ -1,0 +1,16 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{A second CUDA training uses the same source, seed, and case manifests but a distinct checkpoint; both runs retain the negative comparison.}
+\label{tab:replay-sensitivity}
+\begin{tabular}{lrrr}
+\toprule
+Cohort & Velocity ratio, first / replay & Time ratio, first / replay & Flags, first / replay \\
+\midrule
+In distribution & 3.034 / 3.050 & 4.957 / 5.128 & 14/12 \\
+Family shift & 2.178 / 2.174 & 5.733 / 5.740 & 80/80 \\
+Acquisition shift & 3.092 / 3.107 & 5.268 / 5.427 & 6/7 \\
+Joint shift & 2.194 / 2.190 & 5.585 / 5.595 & 160/160 \\
+\bottomrule
+\end{tabular}
+\end{table}

@@ -1,0 +1,36 @@
+{
+  "schema": "caos.declared-artifacts/v1",
+  "case_id": "FWI_NOISY",
+  "artifacts": [
+    {
+      "path": "v2/FWI_NOISY/reference.json",
+      "bytes": 24257802,
+      "sha256": "c74f02d7c0684857be4e645261f6afe8e5972bc313f15ec6de1662c138ffcc59"
+    },
+    {
+      "path": "v2/FWI_NOISY/contrast.json",
+      "bytes": 24219504,
+      "sha256": "053c236775de00cdbbcf79e16bc66811f74b36d7f2994c2668ab29869a65d16f"
+    },
+    {
+      "path": "v2/FWI_NOISY/noise.json",
+      "bytes": 24169505,
+      "sha256": "4247d7e8859fb3ff4a9f3e8fe50fefca84fc0f3bf3ba2d23fc5527329726ccdc"
+    },
+    {
+      "path": "v2/FWI_NOISY/acquisition.json",
+      "bytes": 24038245,
+      "sha256": "bcf12e677a44610d9749f7f9f34047428f6aa971947e21d8e983bf2ef74985dc"
+    },
+    {
+      "path": "v2/FWI_NOISY/coverage.json",
+      "bytes": 22583790,
+      "sha256": "02e4ab5f3d36286f6b440a61d64fee1d9c4072cdd8fc51fe484b7d1d0c944eb8"
+    },
+    {
+      "path": "v2/FWI_NOISY/regularization.json",
+      "bytes": 24243884,
+      "sha256": "91a1432b3b8454202c217d81834f18a138bcb13729fc899bf465ee925d3aa10d"
+    }
+  ]
+}

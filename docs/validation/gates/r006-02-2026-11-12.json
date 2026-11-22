@@ -1,0 +1,26 @@
+{
+  "schema": "geophysics.gate-receipt/v1",
+  "requirement": "R-006",
+  "gate": "tests/api/test_gravity_l2_upload.py::test_uploaded_user_survey_runs_isolated_inverse_and_parameter_changes_predictions",
+  "gate_sha256": "80a60aa98a759433b257f690920a91970cdcc46acca2e0c49ed31d83a7d6305b",
+  "verdict": "pass",
+  "source_revision": "d582cf529fea6688725d7030916f8c525d7e23b7",
+  "command": [
+    ".venv-api/Scripts/python.exe",
+    "-m",
+    "pytest",
+    "-q",
+    "--tb=short",
+    "--junitxml=docs/validation/r006-current-source-2026-11-12.xml",
+    "tests/api/test_gravity_l2_upload.py::test_admission_memory_preflight_does_not_import_solver_engines",
+    "tests/api/test_gravity_l2_upload.py::test_uploaded_user_survey_runs_isolated_inverse_and_parameter_changes_predictions",
+    "tests/api/test_online_mt.py::test_inverse_parameter_effect_and_independent_oracle"
+  ],
+  "measured_at": "2026-11-12T04:04:00Z",
+  "outputs": [
+    {
+      "path": "docs/validation/r006-current-source-2026-11-12.xml",
+      "sha256": "b2c51f82467b35de5eb51047872f5f5ea7ba05e9b78151c5f8524d76f63e64b3"
+    }
+  ]
+}

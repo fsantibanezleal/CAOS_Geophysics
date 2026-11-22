@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { useShellLang } from "@fasl-work/caos-app-shell";
 import { mtForward } from "../mt";
+import { formatNumber } from "../lib/number-format";
 import { LayerColumn, Plot } from "./ScientificPlots";
 export function LiveMT() {
   const es = useShellLang() === "es";
@@ -47,7 +48,7 @@ export function LiveMT() {
             <label key={i} className="range-control">
               <span>
                 {t("Layer", "Capa")} {i + 1}
-                <output>{value.toFixed(1)} Ω m</output>
+                <output>{formatNumber(value, es ? "es-CL" : "en-US", { maximumFractionDigits: 1 })} Ω m</output>
               </span>
               <input
                 aria-label={`${t("Layer", "Capa")} ${i + 1} Ω m`}
@@ -90,7 +91,7 @@ export function LiveMT() {
           <label className="range-control">
             <span>
               {t("Minimum frequency", "Frecuencia mínima")}
-              <output>{10 ** minimum} Hz</output>
+              <output>{formatNumber(10 ** minimum, es ? "es-CL" : "en-US")} Hz</output>
             </span>
             <input
               aria-label={t("Minimum frequency", "Frecuencia mínima")}

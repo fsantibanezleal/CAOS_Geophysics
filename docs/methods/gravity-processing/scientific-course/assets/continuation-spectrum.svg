@@ -1,0 +1,29 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 720" role="img" aria-labelledby="title desc">
+<title id="title">Upward continuation attenuation / Atenuación ascendente</title><desc id="desc">Equal height separation attenuates short waves more. Ideal schematic Fourier modes, not fitted metric outputs. / Igual separación atenúa más ondas cortas. Modos ideales esquemáticos, no resultados ajustados.</desc>
+<style>
+:root{--bg:#f6f8fa;--surface:#fff;--fg:#1f2328;--muted:#57606a;--border:#d0d7de;--blue:#0969da;--cyan:#0a7c8a;--pink:#bf3989;--warn:#9a6700}
+@media(prefers-color-scheme:dark){:root{--bg:#0d1117;--surface:#161b22;--fg:#c9d1d9;--muted:#9aa6b2;--border:#30363d;--blue:#58a6ff;--cyan:#3fb1c8;--pink:#f778ba;--warn:#d29922}}
+text{fill:var(--fg);font:24px ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif}
+.small{font-size:22px;fill:var(--muted)}.head{font-size:26px;font-weight:600}.line{fill:none;stroke:var(--fg);stroke-width:2.5}.ref{fill:none;stroke:var(--blue);stroke-width:3}.geo{fill:none;stroke:var(--cyan);stroke-width:3;stroke-dasharray:8 5}.mass{fill:var(--cyan);fill-opacity:.13;stroke:var(--cyan);stroke-width:2.5}.layer{fill:none;stroke:var(--pink);stroke-width:3;stroke-dasharray:7 5}.box{fill:var(--surface);stroke:var(--border);stroke-width:2}.warn{fill:var(--warn)}.blue{fill:var(--blue)}.pink{fill:var(--pink)}.cyan{fill:var(--cyan)}
+</style>
+<defs><marker id="arrow" viewBox="0 0 10 10" refX="8" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="context-stroke"/></marker></defs>
+<rect width="600" height="720" rx="12" fill="var(--bg)"/>
+
+<text class="head" x="30" y="48">Upward field / Campo superior</text>
+<text class="small" x="30" y="84">Ideal Fourier modes / Modos ideales Fourier</text>
+<path class="line" d="M55 415V135" marker-end="url(#arrow)"/><text x="25" y="125">z</text>
+<path class="ref" d="M90 175H540M90 360H540"/>
+<text class="blue" x="105" y="153">Target z + Δh / Objetivo</text>
+<text class="blue" x="105" y="425">Observation z / Observación</text>
+<path class="line" d="M520 352V184" marker-start="url(#arrow)" marker-end="url(#arrow)"/><text x="533" y="275">Δh</text>
+<path d="M100 360Q200 295 300 360T500 360" fill="none" stroke="var(--cyan)" stroke-width="3"/>
+<path d="M100 175Q200 142.5 300 175T500 175" fill="none" stroke="var(--cyan)" stroke-width="3"/>
+<path d="M100 360Q125 317 150 360T200 360T250 360T300 360T350 360T400 360T450 360T500 360" fill="none" stroke="var(--pink)" stroke-width="3"/>
+<path d="M100 175Q125 172.3125 150 175T200 175T250 175T300 175T350 175T400 175T450 175T500 175" fill="none" stroke="var(--pink)" stroke-width="3"/>
+<text class="cyan" x="35" y="465">Long wave / Onda larga</text>
+<text class="pink" x="35" y="505">Short wave / Onda corta</text>
+<text x="35" y="565">Amplitude factor / Factor: exp(−k Δh)</text>
+<text x="35" y="610">k = 2π / ℓ</text><text class="small" x="220" y="610">ℓ: wavelength / onda (m)</text>
+<text class="small" x="35" y="655">Δh ≥ 0 · source-free / libre de fuentes</text>
+<text class="small" x="35" y="692">Not density / No densidad</text>
+</svg>

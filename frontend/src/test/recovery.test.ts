@@ -161,7 +161,7 @@ describe("evidence contracts", () => {
     const m = method({ model: [100, 200], uncertainty: ensemble() });
     const r = run({ family: "mt", truth: [100, 240], methods: { "mt-lm": m } });
     const html = renderToStaticMarkup(createElement(UncertaintyView, { run: r, method: m, section: 0 }));
-    expect(html).toContain("not posterior"); expect(html).toContain("50%"); expect(html).toContain("empirical quantiles"); expect(html).toContain("fill-opacity");
+    expect(html).toContain("not posterior"); expect(html).toContain("50%"); expect(html).toContain("empirical quantiles"); expect(html).toContain("empirical quantiles lower"); expect(html).toContain("empirical quantiles upper");
     expect(renderToStaticMarkup(createElement(UncertaintyView, { run: r, method: method(), section: 0 }))).toBe("");
   });
   it("renders PGI secondary property and independent prior data", () => {
@@ -205,7 +205,9 @@ describe("evidence contracts", () => {
     expect(html).toContain("missed every tested OOD case");
     expect(html).toContain("High specificity does not compensate");
     const calibration = renderToStaticMarkup(createElement(PotentialCalibration));
-    expect(calibration).toContain("9.88%");
+    // The default shell locale is Spanish in the test harness; keep the
+    // assertion valid for both correctly grouped decimal separators.
+    expect(calibration).toMatch(/9[.,]88%/);
     expect(calibration).toContain("16");
     expect(calibration).toContain("nominal 95%");
     expect(calibration).toContain("negative evidence");

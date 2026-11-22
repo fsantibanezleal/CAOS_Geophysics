@@ -1,5 +1,6 @@
 """Independent ERT halfspace oracle and conditional field predictive gates."""
 import hashlib
+import os
 import json
 import math
 from pathlib import Path
@@ -11,7 +12,8 @@ import ert as ert_pipeline
 from ert import _mesh_sha256, Survey, flat_halfspace_factors, inverse_verdict, run, run_source
 
 ROOT = Path(__file__).resolve().parents[2]
-RAW = ROOT / "data/downloads/pygimli/slagdump.ohm"
+DATA_ROOT = Path(os.environ.get("GEOPHYSICS_LOCAL_DATA_ROOT", ROOT))
+RAW = DATA_ROOT / "data/downloads/pygimli/slagdump.ohm"
 
 
 def test_flat_homogeneous_oracle():
@@ -76,7 +78,7 @@ def test_field_result_receipt_and_uncertainty(field_result):
         assert len(digest) == 64 and all(c in "0123456789abcdef" for c in digest)
     assert math.isfinite(field_result["sensitivity"]["alternate_mesh"]["heldout_log_r_rmse"])
     assert math.isfinite(field_result["sensitivity"]["doubled_assumed_error"]["heldout_log_r_rmse"])
-    target = (ROOT / "data/raw/ert" / f"slagdump-m07-inverse-{field_result['code_sha256'][:12]}.json")
+    target = (DATA_ROOT / "data/raw/ert" / f"slagdump-m07-inverse-{field_result['code_sha256'][:12]}.json")
     assert target.exists()
     assert hashlib.sha256(target.read_bytes()).hexdigest() == Path(str(target) + ".sha256").read_text().strip()
     assert json.loads(target.read_text(encoding="utf-8"))["source_sha256"] == field_result["source_sha256"]

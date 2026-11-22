@@ -1,0 +1,94 @@
+{
+  "base_revision": "2b1e395",
+  "claims": {
+    "candidate_selection": false,
+    "field_geology_validated": false,
+    "field_observations": false,
+    "independent_full_fit_oracle": false,
+    "method_accepted": false,
+    "online_admitted": false,
+    "outer_evaluation": false,
+    "truth_recovery_assessed": false
+  },
+  "command": "python -m pytest tests/numerics/test_magnetic_calibration_current.py -p no:cacheprovider --basetemp $CAOS_TEMP_ROOT/m04-calibration-20261111 -q -s",
+  "environment": {
+    "blas_threads": 1,
+    "choclo": "0.3.2",
+    "discretize": "0.12.0",
+    "gpu_used": false,
+    "numpy": "2.2.6",
+    "python": "3.12.10",
+    "scipy": "1.15.2",
+    "simpeg": "0.25.2"
+  },
+  "file_hashes": {
+    "tests/fixtures/magnetic_survey/generated/manifest.json": "8b1b541cfe36d024cfb2f2354c6669a9bd5794da6b05d1bd4873fa3111b7ae08",
+    "tests/numerics/test_magnetic_calibration_current.py": "3fcdca05c31c777e801b63ff7856657ee69e959755947fc37a0d170240bafef0"
+  },
+  "fit": {
+    "active_parameters": 528,
+    "beta": 0.0001,
+    "certificate": {
+      "kappa_upper": "0.000002243299473202889440980670030510253",
+      "model_error_upper": "6.407644600296418708484785629719228E-13",
+      "objective_gap_upper": "1.738277764451077387044492433257912E-15",
+      "passed": true,
+      "physical_prediction_error_upper": "5.112960877093961141658377233713723E-11",
+      "proof_basis": "free_face_neumann",
+      "reason": "original_accuracy_certified",
+      "source_normalized_kkt_upper": "1.119698199062626295969625968149742E-16"
+    },
+    "fit_rows": 144,
+    "fold": 0,
+    "iterations": 113,
+    "normalized_projected_kkt_inf": 1.420804898067916e-16,
+    "outer_rows_sealed_out": 72,
+    "penalty": "l2",
+    "phi_d": 374.0400213417713,
+    "phi_engine": 374.0413291495234,
+    "phi_m": 13.078077520882001,
+    "quantity": "linear_tmi_nT",
+    "solver_elapsed_seconds": 63.515,
+    "status": "converged",
+    "validation_rows_sealed_out": 72
+  },
+  "method": "M04 induced-magnetization survey inversion",
+  "request": {
+    "geometry_seal_sha256": "22d6214a89dc7f1fbcf988d4bff6475f2fd409c9464c7e22d58cebcf8f3a033d",
+    "manifest_sha256": "8b1b541cfe36d024cfb2f2354c6669a9bd5794da6b05d1bd4873fa3111b7ae08",
+    "path": "tests/fixtures/magnetic_survey/generated/requests/S2-A-linear_tmi_nT.json",
+    "sha256": "e8ada27dc7e2a9d911c8bf3c2f684a36753041ddb14e989f70ea1acafbba2afa"
+  },
+  "schema": "m04-current-source-l2-fold-validation-1",
+  "scope": "one authored synthetic development fold; no field or method acceptance",
+  "source_inventory": {
+    "geometry_seal_sha256": "22d6214a89dc7f1fbcf988d4bff6475f2fd409c9464c7e22d58cebcf8f3a033d",
+    "magnetic_calibration.py": "96d28a418e0b92a467cf49e889905d00f15ef1613132757f396186debadab5e9",
+    "magnetic_fit_assembly.py": "878053cc7f0e45f7d662a758481975dd548f5df57944062814b374e59c407866",
+    "magnetic_forward.py": "d42dac128182e2f5014800309cdfb39ce1eb9add4d498736bba306170e7a3c5e",
+    "magnetic_inverse.py": "c4b1bb54be29372219d594919c270d6b7e3d618a64fe9bdad9ac93828ec56d27",
+    "magnetic_likelihood.py": "579f95f491a9c93820cdb5c51604e5b443c18b99d5846b5bfc0e776840432119",
+    "magnetic_optimizer_adapter.py": "27acdc9df252c4ebd2eb43453bf5884a53dd9cd4c845c6012daf02b61c8ef5f7",
+    "magnetic_original_optimizer.py": "a0615d27dc13df7941b6832c80229f32169ad78ddf73acae13f2d1b0dc970cbd",
+    "magnetic_quantity.py": "3e5fefd8cf64e96b7904d659e113686a209fa7fbdd53c637dfc2e7c95957cf90",
+    "magnetic_regularization.py": "9355f9e2ac911a9096cc471f8125ddd7829d24bef93dc81202dd5e9ee9348dd8",
+    "magnetic_survey.py": "4168ced64eaa73f4fb0c7d81e4d1716a3366f38b9cf1bffd2c4af5d899061209",
+    "magnetic_survey_json.py": "d0261b22623a992a23b6f04398430c22d71581999ff944bf7cfb888138090b5c",
+    "physical_conditioned_optimizer.py": "1342ade648175f89ee5e2aeb802ab56dbe18e2272c6c3f0ff293a8aab4267b9c",
+    "physical_original_optimizer.py": "eda6b950f9bdf41c172e73b4f25ab7ee87f6c459b21aeed07f8350b3d83ac7f0",
+    "physical_original_quadratic.py": "03a1f7f58a11945d005d99eeed195056247d2fcfa0c7671b4d8a4a68e7bd2873",
+    "physical_original_terminal.py": "6f3e76cd0fdd0f3b8b2408ed136febe158195bffc840b76f05581fbc9adb5524",
+    "physical_owned_spd.py": "f5bd0381bea21e95b4635fdf75711cdddacec274430774b02723f1f9f35411b5",
+    "physical_reduced_optimizer.py": "22bf04a7e260b5f93c2e54430f54c3d3464150b3ce78d861c8236bc3d6b21aad",
+    "simpeg.optimization": "0ac858cc310b32bb9aa59c78aaaa9c79b5f28438db52fb06ec73d976b63196a4",
+    "simpeg.regularization": "aae7dbd3cb4887246f38c8ceba4fe8fbeeb5592110341635e06fdb70246a92b5",
+    "survey_request_sha256": "e8ada27dc7e2a9d911c8bf3c2f684a36753041ddb14e989f70ea1acafbba2afa"
+  },
+  "source_inventory_sha256": "de892dd21f3e55cf3f32a21f3345e71e4aee3bb7beb9ce375759821d5a090599",
+  "test_result": {
+    "failed": 0,
+    "passed": 4,
+    "process_exit_code": 0,
+    "skipped": 0
+  }
+}

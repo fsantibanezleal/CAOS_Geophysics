@@ -1,0 +1,51 @@
+# Notebook execution and content review: 2026-10-27
+
+## Current evidence
+
+- `scripts/check_notebooks.py`: 56 notebooks satisfy the structural bilingual bar. The bilingual M12 user-data lesson calls the actual classical calculation and reruns uncertainty/regularization sensitivity; it does not imply learned-checkpoint acceptance.
+- `scripts/run_notebooks.py --check --tmp E:\_worktrees\_notebook-check-release`: the 52-notebook full fresh-kernel replay passed on 2026-10-27 before the later M02/M04/M10/M11 additions. After those edits, all four changed bilingual pairs were separately executed in fresh kernels and passed strict output checks. The M09 pyGIMLi lesson fixes NumPy and native numerical-library thread settings. Its plots deliberately show 100 m/s velocity bins and a binary nonzero-ray-support mask; reported metrics are rounded, while full-precision model and path-length arrays remain in the notebook result object.
+- Superseding full replay at source revision `46f1ded91c28cb649cef628e0487cd6e31972822`: `CAOS_TEMP_ROOT=E:\_Temp\caos-notebooks-full-check-1aba42ad45df45988241d0f50e446b63 .venv-notebooks\Scripts\python.exe scripts\run_notebooks.py --check --tmp E:\_Temp\caos-notebooks-full-check-1aba42ad45df45988241d0f50e446b63` completed with `OK, 56 notebooks executed top to bottom in fresh kernels (check, nothing written)`. All 28 English and 28 Spanish notebooks passed; fresh outputs matched the committed notebooks under the runner's declared comparison rules. The check runner removed its per-notebook temporary copies after comparison. Windows Proactor/ZeroMQ emitted transport warnings, including one child connection-reset diagnostic, but the runner completed with exit code 0 and no notebook failure.
+- The four ERT solver notebooks declare a narrowly bounded PNG pixel tolerance for repeat-run floating-point drift. Their text, numeric outputs and source inputs still compare exactly. The 94 saved PNGs were re-encoded canonically; decoded pixels were unchanged.
+- `scripts/check_method_matrix.py`: 13/13 structural gates are present; it reports `scientific_acceptance=false`.
+- Focused M07 tests: 6 passed, 3 skipped because the rights-restricted Slagdump raw asset is absent locally. The source ledger says provider-link-only; this review does not authorize mirroring it.
+
+## Independent content review findings
+
+These are content-review results, not execution failures.
+
+### English
+
+The initial review passed 12 of 25 notebooks and found 13 needing correction. It identified a wrong M03 holdout count, stale learning and OOD metrics, a waveform lesson that reimplemented and mislabelled the product filter, a travel-time lesson whose main inverse was notebook-only LSQR, three Level 3 lessons without an independent reference solve, an M11 lesson that mainly replayed a stored receipt, an M13 lesson without picker inference, and missing source-rights attribution for external data.
+
+The English repair pass changed and executed the affected notebooks. It corrected the M03 row count, held-out OOD counts and learning comparison, replaced the waveform filter reproduction with the product call, added rights attribution, and made the joint objective lesson report separate terms. The M09 lesson now also calls the exact product pyGIMLi Dijkstra inverse core on a generated refracting two-layer survey, compares a complete-shot holdout against its training-only homogeneous baseline, and plots known truth, recovered velocity and training-ray coverage. The M10 notebook now executes full-band and frequency-continuation product FWI against a declared 1-D start. Both schedules remain unresolved because fit and withheld WRMS exceed the declared noise-consistency target. Broader FWI regimes and an independent solver comparator remain open, alongside independent MT/ERT comparisons, multi-family M11 optimizer/baseline analysis beyond the one new 26-candidate control, and the 23-trace M13 ONNX private-oracle replay.
+
+### Spanish
+
+The initial Spanish-content audit passed 0 of 25 notebooks. It found untranslated prose/comments, cross-topic magnetic text, an M04 result contradiction, a rank-versus-noise identifiability error, and terminology violations. The repair pass translated prose, comments, and labels and fixed the M03/M04 and identifiability explanations. It then executed 20 notebooks; M11 had a receipt enum mismatch and four learning notebooks remained to run.
+
+An independent final review found three defects: a stale saved count in Spanish M03 (4 instead of 72), conflicting saved/prose counts in Spanish M08 (1 false positive instead of 3), and a Spanish M11 objective notebook that plotted the diagnostic but did not call the product objective. All three were corrected; the M11 receipt enum was corrected; affected Spanish notebooks were executed again in fresh kernels. The M09 addition is now mirrored in Spanish and freshly executed. Its result is synthetic method evidence only; it does not establish the provider-linked Koenigsee case. The final content review found no other high-severity bilingual mismatch. This review does not claim exhaustive copy-editing or whole-course owner acceptance.
+
+The M03 lesson now executes the shared line-processing implementation on an authored survey: source hashing, explicit column mapping, line/tie/height QC, crossover residuals, blocked-line holdout, support-masked gridding, a spacing-sensitivity comparison and a separate analytic continuation control. A browser-local workbench also runs the same Python processor through Pyodide/SciPy. These authored controls do not close provider-data acceptance, broad magnetic inversion, randomized browser parity or supported-device resource qualification.
+
+The bilingual M10 case-matrix lesson (`notebooks/{en,es}/06-seismology/05-m10-fwi-case-matrix.ipynb`) now compares four catalog-hash-verified full-run artifacts: layered reflection, fault displacement, salt-dome cycle skipping, and a low-velocity channel. It plots truth, the independent 1-D start, frequency-continuation recovery, and signed residual gathers with withheld receivers marked; shared axes and case-level model-RMSE/start, fitted-WRMS, withheld-WRMS, and verdicts prevent visual or aggregate masking. The salt case remains an explicit negative control, and the channel fails its declared noise-consistency gate. This re-analysis does not retrain or re-solve FWI, add an independent propagator, or remove the same-engine inverse-crime limitation.
+
+## Release effect
+
+The bilingual notebook set passes its structural gate at 56 mirrored notebooks; every notebook has prior fresh-kernel evidence, and the new M10 pair was independently run and strict-check replayed in fresh kernels after its final edits. The new matrix reads catalogued full-run artifacts (it does not rerun the expensive FWI solve): layered and fault cases are marked recovered, salt retains its cycle-skipping negative-control verdict, and the low-velocity channel remains unresolved because fitted/withheld WRMS are 2.071/2.213 against the declared noise scale of 1. Model RMSE/start ratios are 0.527, 0.653, 0.803, and 0.521 respectively; these synthetic scores do not establish field recovery. The earlier M10 bilingual lesson executes actual product FWI in full-band and frequency-continuation schedules; both are unresolved (fit/withheld WRMS 13.820/13.720 and 15.285/15.162), while model RMSE improves only to 0.963/0.962 of the declared start. The M11 bilingual lesson executes actual 26-candidate train-only calibration on one synthetic control: 22 candidates converged, four did not, and the selected coupling changes validation WRMS by only about 1e-6. This is one authored control, not field evidence. Focused ERT tests retain 3 skips because rights-restricted Slagdump raw bytes are absent. The docs-matrix structure gate passes. The convergence ledger remains 1 failed and 18 unresolved.
+
+The bilingual notebook set is not accepted as complete course content. M02/M04's new 3D inversion lessons, M03's line-processing lesson and M09's exact-core synthetic inverse are meaningful scoped additions; provider-source validation and the broader survey inverse remain unaccepted. Additional FWI regimes and an independent solver comparison, multi-family M11 optimizer and paired single-modality analysis beyond one fresh calibration, M12 velocity-checkpoint inference, independent MT/ERT comparisons, a fresh 23-trace M13 ONNX/private-oracle browser parity run, complete cross-modality user-data workflows beyond the implemented first-arrival browser calculation, rendered acceptance and actual-host gates remain open under `docs/design/SDD.md` and `docs/design/convergence.json`. No release cutover is authorized by these notebook checks.
+
+The notebook/harness milestone is evidence-backed and ready to persist on the task branch; it does not satisfy full product promotion or deployment acceptance.
+
+## 2026-10-28 M12 checkpoint lesson update
+
+The bilingual course now has 58 mirrored notebooks. The new M12 Level 3 pair
+trains and verifies the fixed learned velocity checkpoint, compares all six
+cohorts with the same-input classical solver, and checks each result with the
+independent quadrature forward operator. Both fresh-kernel runs and subsequent
+fresh-output `--check` replays pass; see
+[`m12-checkpoint-notebook-2026-10-28.md`](m12-checkpoint-notebook-2026-10-28.md).
+The measured joint family/acquisition holdout fails the frozen comparator by
+wide margins (velocity ratio 5.616; independent time ratio 12.231). This closes
+the missing checkpoint-inference teaching artifact only. M12 remains failed;
+full notebook/course acceptance and whole-product release gates remain open.

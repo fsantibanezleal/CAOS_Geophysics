@@ -10,3 +10,5 @@ Dependency order; each task names its requirement gate.
 6. [x] Diagnose the reported independent rerun without modifying the old ignored receipt; distinguish fixed-model forward/mesh/Jacobian from the nonlinear inner solve. TT-09.
 7. [x] Pin and test the inner CGLS convergence controls; tighten repeatability comparison without changing the predictive holdout/stop gates. TT-09.
 8. [x] Run fresh and repeated full-field tests, verify the old receipt hash, update the convergence verdict, and push only the existing task branch. TT-09.
+9. [x] Add a bilingual known-truth refracting survey lesson that invokes the canonical M09 pyGIMLi inverse core, evaluates a predeclared whole-shot holdout against a training-only homogeneous baseline, and visualizes truth, recovered velocity and ray-path coverage. Keep it separate from the provider-linked field verdict.
+10. [ ] Add accepted provider-rights/field data to a public or owner-facing M09 case only after the source ledger and independent scientific review authorize those outputs.

@@ -749,7 +749,7 @@ export const chapters: Chapter[] = [
       ),
       T(
         "The validation set selects the lowest-MSE checkpoint. The held-out test evaluates that checkpoint and a noise-aware spatial L2 comparator on exactly identical noisy observations, then projects the classical estimate onto the same 24 × 28 column target. Input hashes and per-realization errors make that comparison inspectable. Neither a lower average nor a sharper map establishes field transfer; withheld oblique and ring cases retain their individual failures.",
-        "Validación selecciona el checkpoint de menor MSE. Prueba evalúa ese checkpoint y un comparador espacial L2 con idénticas observaciones ruidosas, proyectando el modelo clásico al mismo objetivo de columnas 24 × 28. Se exportan hashes de entradas y errores por realización. Un promedio menor o imagen más definida no demuestra transferencia de campo; los casos oblicuo y anular omitidos conservan sus fallos individuales.",
+        "Validación selecciona el checkpoint de menor MSE. Prueba evalúa ese checkpoint y un comparador espacial L2 con idénticas observaciones ruidosas, proyectando la solución L2 al mismo objetivo de columnas 24 × 28. Se exportan hashes de entradas y errores por realización. Un promedio menor o imagen más definida no demuestra transferencia de campo; los casos oblicuo y anular omitidos conservan sus fallos individuales.",
       ),
     ],
     equations: [

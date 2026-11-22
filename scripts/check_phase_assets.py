@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import hashlib
+import gzip
 import json
 from pathlib import Path
 import re
@@ -12,6 +13,8 @@ ROOT = Path(__file__).resolve().parents[1]
 ASSETS = ROOT / "data/derived/phase/browser-assets/stead"
 BENCHMARK = ROOT / "data/derived/phase/stead-heldout-benchmark.json"
 OVERLAP = ROOT / "data/derived/phase/stead-heldout-overlap.json"
+SOURCE_RECEIPT = ROOT / "data/derived/phase/stead-waveform-source.json"
+RIGHTS_REVIEW = ROOT / "docs/design/features/phase-picking/rights-review-2026-10-28.md"
 HOST_PATH = re.compile(rb"[A-Za-z]:\\(?:[^\\\x00\r\n]{1,100}\\){2}")
 
 
@@ -26,13 +29,48 @@ def digest(payload: bytes) -> str:
 
 
 def validate() -> None:
-    manifest = json.loads(raw("manifest.json"))
+    manifest_bytes = raw("manifest.json")
+    manifest = json.loads(manifest_bytes)
     benchmark_bytes = raw("benchmark.json")
     benchmark = json.loads(benchmark_bytes)
     overlap = json.loads(OVERLAP.read_bytes())
+    source_receipt = json.loads(SOURCE_RECEIPT.read_text(encoding="utf-8"))
+    rights = manifest["source"]["redistribution"]
+    source_rights = source_receipt["rights"]
     assert manifest["schema"] == "caos.phase-browser-assets.v1"
+    assert manifest["status"] == (
+        "browser-runtime-parity-verified; accuracy-unproven; release-unaccepted"
+    )
+    assert manifest["export_status"] == "assets-exported-browser-parity-not-yet-verified"
     assert manifest["source"]["license"] == "CC BY 4.0"
+    assert manifest["source"]["license_url"] == (
+        "https://github.com/smousavi05/STEAD/blob/e6f247cf174e4aaefe01a6fcc72a0e88296d42b4/LICENSE"
+    )
     assert manifest["source"]["doi"] == "10.1109/ACCESS.2019.2947848"
+    assert rights["decision"] == "approved-with-attribution"
+    assert rights["license"] == "CC BY 4.0"
+    assert rights["license_url"] == "https://creativecommons.org/licenses/by/4.0/"
+    assert rights["review"] == "docs/design/features/phase-picking/rights-review-2026-10-28.md"
+    assert rights["attribution_file"] == "ATTRIBUTION.md"
+    assert source_rights["release_decision"] == "public-selected-derivatives-approved-with-CC-BY-4.0-attribution"
+    assert source_rights["rights_review"] == rights["review"]
+    assert source_rights["reviewed_upstream_license_url"] == manifest["source"]["license_url"]
+    for key, manifest_key in (
+        ("reviewed_upstream_license_commit", "upstream_license_commit"),
+        ("reviewed_upstream_license_blob_sha1", "upstream_license_blob_sha1"),
+        ("reviewed_upstream_license_sha256", "upstream_license_sha256"),
+        ("reviewed_seisbench_commit", "seisbench_commit"),
+        ("reviewed_seisbench_stead_blob_sha1", "seisbench_stead_blob_sha1"),
+        ("reviewed_mirror_license_sha256", "mirror_license_sha256"),
+    ):
+        assert source_rights[key] == rights[manifest_key]
+    attribution = raw("ATTRIBUTION.md").decode("utf-8")
+    review = RIGHTS_REVIEW.read_text(encoding="utf-8")
+    assert RIGHTS_REVIEW.is_file()
+    for required in ("Mousavi", "Sheng", "Zhu", "Beroza", "CC BY 4.0", "changes", "not endorsed"):
+        assert required.casefold() in attribution.casefold()
+    assert "no-warranty" in attribution.casefold()
+    assert "approved for public distribution" in review
     assert manifest["selection"]["selected_before_heldout_scoring"] is True
     assert (manifest["selection"]["selected"], manifest["selection"]["qc_valid"],
             manifest["selection"]["qc_rejected"]) == (24, 23, 1)
@@ -40,8 +78,17 @@ def validate() -> None:
     assert manifest["input"]["component_order"] == ["E", "N", "Z"]
     assert manifest["output"]["classes"] == ["N", "P", "S"]
     assert manifest["model"]["file"] == "model.onnx"
-    model = raw("model.onnx")
-    assert len(model) == manifest["model"]["bytes"] <= 10_000_000
+    model_meta = manifest["model"]
+    source_name = model_meta.get("source_file", model_meta["file"])
+    assert Path(source_name).name == source_name
+    model_source = raw(source_name)
+    if source_name.endswith(".gz"):
+        assert len(model_source) == model_meta["source_bytes"] <= 5 * 1024 * 1024
+        assert digest(model_source) == model_meta["source_sha256"]
+        model = gzip.decompress(model_source)
+    else:
+        model = model_source
+    assert len(model) == model_meta["bytes"] <= 10_000_000
     assert digest(model) == manifest["model"]["sha256"]
     assert HOST_PATH.search(model) is None, "ONNX contains an absolute host path"
     assert manifest["benchmark"]["file"] == "benchmark.json"
@@ -53,6 +100,41 @@ def validate() -> None:
     assert benchmark["valid"] == manifest["benchmark"]["qc_valid"] == 5926
     assert overlap["checkpoint_sha256"] == benchmark["checkpoint_sha256"]
     assert overlap["array_sha256"]["test"] == benchmark["test_array_sha256"]
+
+    assert manifest["browser_parity_verified"] is True
+    parity_meta = manifest["browser_parity_receipt"]
+    assert parity_meta["accuracy_claim"] is False
+    assert parity_meta["release_accepted"] is False
+    parity_bytes = raw("browser-parity.json")
+    parity = json.loads(parity_bytes)
+    assert parity_meta["file"] == "browser-parity.json"
+    assert parity_meta["sha256"] == digest(parity_bytes)
+    assert parity["schema"] == "caos.m13-browser-population-parity.v1"
+    assert parity["status"] == "pass"
+    exported_manifest = {
+        key: value for key, value in manifest.items()
+        if key not in {"browser_parity_receipt", "export_status"}
+    }
+    exported_manifest["status"] = manifest["export_status"]
+    exported_manifest["browser_parity_verified"] = False
+    assert parity["manifestSha256"] == digest((
+        json.dumps(exported_manifest, indent=2, sort_keys=True) + "\n"
+    ).encode("utf-8"))
+    assert parity["modelSha256"] == manifest["model"]["sha256"]
+    assert parity["verifierScriptSha256"] == digest(
+        (ROOT / "frontend/scripts/verify-phase-browser-population.mjs").read_bytes()
+    )
+    assert parity["gateEntrypointSha256"] == digest(
+        (ROOT / "frontend/scripts/verify-phase-browser-parity.mjs").read_bytes()
+    )
+    assert parity["population"] == {
+        "selected": 24, "qcValidBrowserInferences": 23, "qcRejectedExcluded": 1,
+        "selectionBeforeHeldoutScoring": True, "allCpuReferenceHashesVerified": True,
+        "accuracyClaim": False,
+    }
+    assert parity["maxProbabilityAbsoluteError"] <= 0.001
+    assert parity["maxPeakDifferenceSamples"] <= 1
+    assert len(parity["traces"]) == 23
 
     records = manifest["records"]
     assert len(records) == 24 and len({row["trace_id"] for row in records}) == 24
@@ -72,7 +154,7 @@ def validate() -> None:
         assert digest(payload) == row["waveform_sha256"]
     assert wave_files == {path.name for path in ASSETS.glob("trace-*.f32")}
     assert (ASSETS / "ATTRIBUTION.md").is_file()
-    print("PASS: M13 model, 23 waveform assets, QC rejection, benchmark and hashes consistent")
+    print("PASS: M13 rights, assets, 6,000-trace benchmark, 23/1 display population, browser parity receipt and hashes consistent")
 
 
 if __name__ == "__main__":

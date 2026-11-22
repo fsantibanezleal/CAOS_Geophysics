@@ -1,8 +1,22 @@
 # Canonical OFFLINE lane. Each dependency is documented under docs/frameworks/.
 -r data-pipeline/requirements.txt
+-r data-pipeline/requirements-phase-export.txt
+-r data-pipeline/requirements-phase.txt
 scipy==1.15.2
 pandas==2.2.3
+matplotlib==3.10.8
 simpeg==0.25.2
+# M02 runtime-source attestation and sparse-solver behavior use this exact release.
+pymatsolver==0.4.0
+geoana==0.8.1
 discretize==0.12.0
 choclo==0.3.2
 mt-metadata==1.0.10
+numba==0.67.0
+llvmlite==0.49.0
+# Lets the pinned offline environment execute CPU/GPU scientific notebooks.
+ipykernel==7.4.0
+# M01 physical station correction/transform fixtures used by the local API
+# publication tests; these remain offline/precompute-only dependencies.
+boule==0.5.0
+harmonica==0.7.0

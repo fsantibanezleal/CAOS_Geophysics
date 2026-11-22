@@ -1,9 +1,11 @@
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
 import type { FlagResult, GravityDataset } from "../api/processing-contracts";
+import { downloadInspection, gravityInspection } from "./result-view-data";
+import { formatNumber, formatCount } from "../lib/number-format";
 
 type Bounds = { x0: number; x1: number; y0: number; y1: number };
 type Kind = "plan" | "observations" | "scores";
-const value = (number: number) => number.toLocaleString("en-US", { maximumSignificantDigits: 7, useGrouping: false });
+const value = (number: number, es: boolean) => formatNumber(number, es ? "es-CL" : "en-US", { maximumSignificantDigits: 7 });
 const range = (values: number[]) => {
   const min = Math.min(...values), max = Math.max(...values);
   const span = max - min;
@@ -112,7 +114,7 @@ function StationPlot({ kind, dataset, result, selected, onSelect, es }: {
   const clip = `station-clip-${kind}`;
   const visible = points.map((point, i) => ({ point, i })).filter(({point}) => point.x >= view.x0 && point.x <= view.x1 && point.y >= view.y0 && point.y <= view.y1);
   return <figure ref={figure} className="processing-plot">
-    <figcaption><strong>{title}</strong><output>{dataset.station_ids[selected]} · {kind === "plan" ? `XY ${value(points[selected].x)}, ${value(points[selected].y)}` : value(points[selected].y)} {unit}</output></figcaption>
+    <figcaption><strong>{title}</strong><output>{dataset.station_ids[selected]} · {kind === "plan" ? `XY ${value(points[selected].x, es)}, ${value(points[selected].y, es)}` : value(points[selected].y, es)} {unit}</output></figcaption>
     <svg ref={svg} viewBox={`0 0 ${size.width} ${size.height}`} role="img" tabIndex={0} aria-label={title}
       onKeyDown={event => {
         if (["ArrowLeft", "ArrowRight", "ArrowUp", "ArrowDown", "+", "=", "-", "Home", "Escape"].includes(event.key)) event.preventDefault();
@@ -127,8 +129,8 @@ function StationPlot({ kind, dataset, result, selected, onSelect, es }: {
       <defs><clipPath id={clip}><rect x={left} y={top} width={width} height={height} /></clipPath></defs>
       {[0, 0.5, 1].map(fraction => <g key={fraction}>
         <line x1={left} x2={right} y1={top + fraction * height} y2={top + fraction * height} className="chart-grid" />
-        <text x={left - 8} y={top + fraction * height + 4} textAnchor="end">{value(view.y1 - fraction * (view.y1 - view.y0))}</text>
-        <text x={left + fraction * width} y={bottom + 20} textAnchor={fraction === 0 ? "start" : fraction === 1 ? "end" : "middle"}>{value(view.x0 + fraction * (view.x1 - view.x0))}</text>
+        <text x={left - 8} y={top + fraction * height + 4} textAnchor="end">{value(view.y1 - fraction * (view.y1 - view.y0), es)}</text>
+        <text x={left + fraction * width} y={bottom + 20} textAnchor={fraction === 0 ? "start" : fraction === 1 ? "end" : "middle"}>{value(view.x0 + fraction * (view.x1 - view.x0), es)}</text>
       </g>)}
       <text x={(left + right) / 2} y={size.height - 7} textAnchor="middle">{kind === "plan" ? `X [m] · EPSG:${dataset.physical_metadata.epsg}` : t("Station order [1]", "Orden de estación [1]")}</text>
       <text transform={`translate(14 ${(top + bottom) / 2}) rotate(-90)`} textAnchor="middle">{kind === "plan" ? "Y [m]" : kind === "scores" ? t("Robust score [1]", "Puntaje robusto [1]") : "g ± σ [mGal]"}</text>
@@ -165,17 +167,18 @@ export function GravityStationInstrument({ dataset, result, es }: { dataset: Gra
       <label className="select-control"><span>{t("Measurement view", "Vista de medición")}</span><select className="select" value={showScores && result ? "scores" : "observations"} onChange={event => setShowScores(event.target.value === "scores")}>
         <option value="observations">{t("Observed gravity ± σ", "Gravedad observada ± σ")}</option><option value="scores" disabled={!result}>{t("Returned robust scores", "Puntajes robustos recibidos")}</option></select></label>
       <button className="btn" aria-pressed={table} onClick={() => setTable(!table)}>{table ? t("Show plots", "Mostrar gráficos") : t("Station table", "Tabla de estaciones")}</button>
+      <button className="btn" onClick={() => downloadInspection(gravityInspection(dataset, result, selected), `gravity-inspection-${dataset.dataset_id}.json`)}>{t("Export exact inspection JSON", "Exportar inspección exacta JSON")}</button>
     </div>
     <output className="processing-station-readout" aria-live="polite" data-testid="station-readout">
-      {dataset.station_ids[selected]} · XYZ {dataset.xyz_m[selected].map(String).join(", ")} m · g {String(dataset.observed_mgal[selected])} ± {String(dataset.sigma_mgal[selected])} mGal
-      {result && ` · ${t("score", "puntaje")} ${String(result.robust_score[selected])} [1] · ${result.outlier_flag[selected] ? t("flagged", "marcada") : t("not flagged", "sin marca")}`}
+      {dataset.station_ids[selected]} · XYZ {dataset.xyz_m[selected].map(v => value(v, es)).join(", ")} m · g {value(dataset.observed_mgal[selected], es)} ± {value(dataset.sigma_mgal[selected], es)} mGal
+      {result && ` · ${t("score", "puntaje")} ${value(result.robust_score[selected], es)} [1] · ${result.outlier_flag[selected] ? t("flagged", "marcada") : t("not flagged", "sin marca")}`}
     </output>
     {table ? <div className="processing-station-table">
-      <div className="processing-view-controls"><button className="btn" disabled={page === 0} onClick={() => setSelected((page - 1) * 50)}>{t("Previous rows", "Filas anteriores")}</button><span>{page * 50 + 1}–{Math.min(count, (page + 1) * 50)} / {count}</span><button className="btn" disabled={(page + 1) * 50 >= count} onClick={() => setSelected((page + 1) * 50)}>{t("Next rows", "Filas siguientes")}</button></div>
+      <div className="processing-view-controls"><button className="btn" disabled={page === 0} onClick={() => setSelected((page - 1) * 50)}>{t("Previous rows", "Filas anteriores")}</button><span>{formatCount(page * 50 + 1, es ? "es-CL" : "en-US")}–{formatCount(Math.min(count, (page + 1) * 50), es ? "es-CL" : "en-US")} / {formatCount(count, es ? "es-CL" : "en-US")}</span><button className="btn" disabled={(page + 1) * 50 >= count} onClick={() => setSelected((page + 1) * 50)}>{t("Next rows", "Filas siguientes")}</button></div>
       <table className="cmp-table"><caption>{t("Original observations and returned QC; no stations excluded", "Observaciones originales y QC recibido; sin excluir estaciones")}</caption>
         <thead><tr><th>{t("Station", "Estación")}</th><th>X [m]</th><th>Y [m]</th><th>Z [m]</th><th>g [mGal]</th><th>σ [mGal]</th><th>{t("Score [1]", "Puntaje [1]")}</th><th>{t("Flag", "Marca")}</th></tr></thead>
         <tbody>{dataset.station_ids.slice(page * 50, (page + 1) * 50).map((id, offset) => { const i = page * 50 + offset; return <tr key={id} aria-selected={selected === i}>
-          <th><button className="btn" aria-pressed={selected === i} onClick={() => setSelected(i)}>{id}</button></th>{[...dataset.xyz_m[i], dataset.observed_mgal[i], dataset.sigma_mgal[i]].map((v, c) => <td key={c}>{String(v)}</td>)}<td>{result ? String(result.robust_score[i]) : t("n/a", "n/d")}</td><td>{result ? result.outlier_flag[i] ? t("Yes", "Sí") : t("No", "No") : t("n/a", "n/d")}</td></tr>; })}</tbody></table>
+          <th><button className="btn" aria-pressed={selected === i} onClick={() => setSelected(i)}>{id}</button></th>{[...dataset.xyz_m[i], dataset.observed_mgal[i], dataset.sigma_mgal[i]].map((v, c) => <td key={c}>{value(v, es)}</td>)}<td>{result ? value(result.robust_score[i], es) : t("n/a", "n/d")}</td><td>{result ? result.outlier_flag[i] ? t("Yes", "Sí") : t("No", "No") : t("n/a", "n/d")}</td></tr>; })}</tbody></table>
     </div> : <div className="processing-charts"><StationPlot kind="plan" dataset={dataset} result={result} selected={selected} onSelect={setSelected} es={es} /><StationPlot kind={showScores && result ? "scores" : "observations"} dataset={dataset} result={result} selected={selected} onSelect={setSelected} es={es} /></div>}
     <p className="plot-note">{t("Circles: stations. Triangles: returned statistical flags. Bars: declared ±1σ, not a model interval. Arrows select stations; +/− zoom; Home resets. Coordinates and observations are unchanged.", "Círculos: estaciones. Triángulos: marcas estadísticas recibidas. Barras: ±1σ declarada, no intervalo de modelo. Flechas seleccionan; +/− acercan; Inicio restablece. Coordenadas y observaciones sin cambios.")}</p>
   </div>;

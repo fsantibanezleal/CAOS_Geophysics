@@ -1,0 +1,1818 @@
+{
+  "schema": "geophysics.field.gravity-time-lapse/v2",
+  "source": {
+    "title": "Long Valley Caldera Gravity Surveys, 1980–1999",
+    "provider": "U.S. Geological Survey, Digital Data Series DDS-81",
+    "data_url": "https://pubs.usgs.gov/dds/dds-81/MonitoringData/Gravity/SpreadsheetFormatData/GravitySurveys.txt",
+    "format_metadata_url": "https://pubs.usgs.gov/dds/dds-81/Intro/MonitoringData/Gravity/DataFormat.html",
+    "fgdc_metadata_url": "https://pubs.usgs.gov/dds/dds-81/Intro/MonitoringData/Gravity/gravitymetadata.htm",
+    "source_sha256": "d7cca18741ef85fa7ea6fe448dabfee40900de6ed45ba5ea3d13b9e9f9ec1424",
+    "metadata_sha256": "78b7a149c31a5453c9253a63e61cbdc831b99e4aa7399c1607fd83065f8f7e63",
+    "metadata_hash_rule": "SHA-256 over UTF-8 metadata after replacing all rotating Cloudflare data-cfemail values and its single injected transient script; all source-authored metadata remains bound",
+    "retrieved_date": "2026-11-02",
+    "attribution": "Battaglia, M., Williams, M.J., Venezky, D.Y., Hill, D.P., Langbein, J.O., Farrar, C.D., Howle, J.F., Sneed, M., and Segall, P., 2003, The Long Valley Caldera GIS Database: U.S. Geological Survey Digital Data Series DDS-81, GravitySurveys.txt."
+  },
+  "observation_contract": {
+    "horizontal_coordinates": "source-reported UTM easting/northing, metres; source datum NAD27; zone not explicitly named here",
+    "gravity_unit": "mGal",
+    "uncertainty": "source-reported 1 standard deviation, mGal",
+    "processing_history": "source describes removal of solid Earth tides and daily instrument drift and least-squares averaging of station occupations",
+    "interpretation_limits": [
+      "No station elevation is present in this table.",
+      "The raw epoch differences are not corrected here for vertical deformation, water-table changes, or inter-epoch covariance.",
+      "These values are field observations and derived temporal differences, not a density model or a unique magma-source estimate.",
+      "Do not use the pairwise standardization as a calibrated detection probability."
+    ],
+    "quality_control": "One exact observation is flagged as suspected source transcription/cross-copy, bound to the retrieved table SHA-256. It remains unchanged and is excluded from default pairwise calculations; callers may explicitly include flagged values."
+  },
+  "epochs": [
+    "1980-06",
+    "1982-06",
+    "1982-09",
+    "1983-07",
+    "1984-07",
+    "1985-07",
+    "1998-07",
+    "1999-07"
+  ],
+  "station_count": 37,
+  "measurement_count": 212,
+  "stations": [
+    {
+      "station_id": "12DOR75",
+      "easting_m": 329558.81,
+      "northing_m": 4171897.32,
+      "measurements": [
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979242.333,
+          "sigma_mgal": 0.005
+        },
+        {
+          "epoch": "1983-07",
+          "gravity_mgal": 979242.317,
+          "sigma_mgal": 0.0034
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979242.215,
+          "sigma_mgal": 0.012
+        }
+      ]
+    },
+    {
+      "station_id": "12JCM82",
+      "easting_m": 330078.01,
+      "northing_m": 4175261.24,
+      "measurements": [
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979250.95,
+          "sigma_mgal": 0.006
+        },
+        {
+          "epoch": "1982-09",
+          "gravity_mgal": 979250.942,
+          "sigma_mgal": 0.004
+        },
+        {
+          "epoch": "1983-07",
+          "gravity_mgal": 979250.935,
+          "sigma_mgal": 0.0077
+        },
+        {
+          "epoch": "1984-07",
+          "gravity_mgal": 979250.934,
+          "sigma_mgal": 0.0087
+        },
+        {
+          "epoch": "1998-07",
+          "gravity_mgal": 979250.874,
+          "sigma_mgal": 0.004
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979250.854,
+          "sigma_mgal": 0.008
+        }
+      ]
+    },
+    {
+      "station_id": "15JCM82",
+      "easting_m": 332778.6,
+      "northing_m": 4174484.55,
+      "measurements": [
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979234.052,
+          "sigma_mgal": 0.006
+        },
+        {
+          "epoch": "1982-09",
+          "gravity_mgal": 979234.044,
+          "sigma_mgal": 0.0042
+        },
+        {
+          "epoch": "1983-07",
+          "gravity_mgal": 979234.034,
+          "sigma_mgal": 0.0038
+        },
+        {
+          "epoch": "1998-07",
+          "gravity_mgal": 979233.979,
+          "sigma_mgal": 0.006
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979233.963,
+          "sigma_mgal": 0.004
+        }
+      ]
+    },
+    {
+      "station_id": "16JCM82",
+      "easting_m": 333520.47,
+      "northing_m": 4173659.22,
+      "measurements": [
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979253.378,
+          "sigma_mgal": 0.003
+        },
+        {
+          "epoch": "1982-09",
+          "gravity_mgal": 979253.372,
+          "sigma_mgal": 0.0053
+        },
+        {
+          "epoch": "1983-07",
+          "gravity_mgal": 979253.37,
+          "sigma_mgal": 0.0034
+        },
+        {
+          "epoch": "1984-07",
+          "gravity_mgal": 979253.373,
+          "sigma_mgal": 0.0062
+        },
+        {
+          "epoch": "1998-07",
+          "gravity_mgal": 979253.316,
+          "sigma_mgal": 0.007
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979253.265,
+          "sigma_mgal": 0.005
+        }
+      ]
+    },
+    {
+      "station_id": "17JCM82",
+      "easting_m": 333626.24,
+      "northing_m": 4171903.23,
+      "measurements": [
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979257.768,
+          "sigma_mgal": 0.006
+        },
+        {
+          "epoch": "1982-09",
+          "gravity_mgal": 979257.775,
+          "sigma_mgal": 0.0024
+        },
+        {
+          "epoch": "1983-07",
+          "gravity_mgal": 979257.765,
+          "sigma_mgal": 0.0056
+        },
+        {
+          "epoch": "1998-07",
+          "gravity_mgal": 979257.68,
+          "sigma_mgal": 0.005
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979257.712,
+          "sigma_mgal": 0.005
+        }
+      ]
+    },
+    {
+      "station_id": "1JD1952",
+      "easting_m": 340232.08,
+      "northing_m": 4166311.72,
+      "measurements": [
+        {
+          "epoch": "1980-06",
+          "gravity_mgal": 979279.947,
+          "sigma_mgal": 0.0002
+        },
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979279.875,
+          "sigma_mgal": 0.004
+        },
+        {
+          "epoch": "1982-09",
+          "gravity_mgal": 979255.21,
+          "sigma_mgal": 0.005,
+          "qc": {
+            "status": "suspect",
+            "reason": "Suspected source transcription/cross-copy: this exact value also appears at 1JCM1952, while nearby 1JD1952 occupations are near 979279.9 mGal. USGS OFR 87-77 reports 979279.87 for 1JD1952 and 979255.21 for 1JCM1952. The 1982-09 source value is preserved and unresolved; no correction is applied.",
+            "review": "unresolved; raw source value retained"
+          }
+        },
+        {
+          "epoch": "1983-07",
+          "gravity_mgal": 979279.869,
+          "sigma_mgal": 0.0028
+        },
+        {
+          "epoch": "1984-07",
+          "gravity_mgal": 979279.876,
+          "sigma_mgal": 0.0074
+        },
+        {
+          "epoch": "1998-07",
+          "gravity_mgal": 979279.815,
+          "sigma_mgal": 0.009
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979279.815,
+          "sigma_mgal": 0.001
+        }
+      ]
+    },
+    {
+      "station_id": "22JCM82",
+      "easting_m": 332215.26,
+      "northing_m": 4171065.92,
+      "measurements": [
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979236.305,
+          "sigma_mgal": 0.006
+        },
+        {
+          "epoch": "1982-09",
+          "gravity_mgal": 979236.316,
+          "sigma_mgal": 0.0046
+        },
+        {
+          "epoch": "1983-07",
+          "gravity_mgal": 979236.311,
+          "sigma_mgal": 0.0036
+        },
+        {
+          "epoch": "1984-07",
+          "gravity_mgal": 979236.313,
+          "sigma_mgal": 0.0057
+        },
+        {
+          "epoch": "1998-07",
+          "gravity_mgal": 979236.217,
+          "sigma_mgal": 0.004
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979236.233,
+          "sigma_mgal": 0.007
+        }
+      ]
+    },
+    {
+      "station_id": "23JCM82",
+      "easting_m": 331824.28,
+      "northing_m": 4170063.72,
+      "measurements": [
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979237.917,
+          "sigma_mgal": 0.005
+        },
+        {
+          "epoch": "1982-09",
+          "gravity_mgal": 979237.917,
+          "sigma_mgal": 0.0026
+        },
+        {
+          "epoch": "1983-07",
+          "gravity_mgal": 979237.901,
+          "sigma_mgal": 0.0055
+        },
+        {
+          "epoch": "1984-07",
+          "gravity_mgal": 979237.904,
+          "sigma_mgal": 0.0041
+        },
+        {
+          "epoch": "1998-07",
+          "gravity_mgal": 979237.81,
+          "sigma_mgal": 0.003
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979237.834,
+          "sigma_mgal": 0.005
+        }
+      ]
+    },
+    {
+      "station_id": "24DOR75",
+      "easting_m": 336407.05,
+      "northing_m": 4178663.26,
+      "measurements": [
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979286.631,
+          "sigma_mgal": 0.005
+        },
+        {
+          "epoch": "1982-09",
+          "gravity_mgal": 979286.602,
+          "sigma_mgal": 0.0096
+        },
+        {
+          "epoch": "1998-07",
+          "gravity_mgal": 979286.564,
+          "sigma_mgal": 0.009
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979286.548,
+          "sigma_mgal": 0.012
+        }
+      ]
+    },
+    {
+      "station_id": "25JCM82",
+      "easting_m": 336091.36,
+      "northing_m": 4172531.07,
+      "measurements": [
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979266.463,
+          "sigma_mgal": 0.007
+        },
+        {
+          "epoch": "1982-09",
+          "gravity_mgal": 979266.45,
+          "sigma_mgal": 0.0066
+        },
+        {
+          "epoch": "1983-07",
+          "gravity_mgal": 979266.453,
+          "sigma_mgal": 0.0024
+        },
+        {
+          "epoch": "1984-07",
+          "gravity_mgal": 979266.45,
+          "sigma_mgal": 0.007
+        },
+        {
+          "epoch": "1998-07",
+          "gravity_mgal": 979266.366,
+          "sigma_mgal": 0.004
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979266.348,
+          "sigma_mgal": 0.009
+        }
+      ]
+    },
+    {
+      "station_id": "2JCM82",
+      "easting_m": 328808.72,
+      "northing_m": 4167627.96,
+      "measurements": [
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979242.013,
+          "sigma_mgal": 0.006
+        },
+        {
+          "epoch": "1982-09",
+          "gravity_mgal": 979242.004,
+          "sigma_mgal": 0.0039
+        },
+        {
+          "epoch": "1983-07",
+          "gravity_mgal": 979242.015,
+          "sigma_mgal": 0.0018
+        },
+        {
+          "epoch": "1984-07",
+          "gravity_mgal": 979242.019,
+          "sigma_mgal": 0.0047
+        },
+        {
+          "epoch": "1998-07",
+          "gravity_mgal": 979241.936,
+          "sigma_mgal": 0.012
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979241.914,
+          "sigma_mgal": 0.008
+        }
+      ]
+    },
+    {
+      "station_id": "2JD1952",
+      "easting_m": 340271.97,
+      "northing_m": 4170662.09,
+      "measurements": [
+        {
+          "epoch": "1980-06",
+          "gravity_mgal": 979277.187,
+          "sigma_mgal": 0.0002
+        },
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979277.161,
+          "sigma_mgal": 0.004
+        },
+        {
+          "epoch": "1982-09",
+          "gravity_mgal": 979277.142,
+          "sigma_mgal": 0.0044
+        },
+        {
+          "epoch": "1983-07",
+          "gravity_mgal": 979277.138,
+          "sigma_mgal": 0.0039
+        },
+        {
+          "epoch": "1984-07",
+          "gravity_mgal": 979277.136,
+          "sigma_mgal": 0.0057
+        },
+        {
+          "epoch": "1998-07",
+          "gravity_mgal": 979277.119,
+          "sigma_mgal": 0.01
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979277.137,
+          "sigma_mgal": 0.006
+        }
+      ]
+    },
+    {
+      "station_id": "39DOR75",
+      "easting_m": 340137.81,
+      "northing_m": 4176492.17,
+      "measurements": [
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979276.264,
+          "sigma_mgal": 0.005
+        },
+        {
+          "epoch": "1982-09",
+          "gravity_mgal": 979276.239,
+          "sigma_mgal": 0.0131
+        },
+        {
+          "epoch": "1998-07",
+          "gravity_mgal": 979276.218,
+          "sigma_mgal": 0.023
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979276.204,
+          "sigma_mgal": 0.006
+        }
+      ]
+    },
+    {
+      "station_id": "3JCM82",
+      "easting_m": 327207.4,
+      "northing_m": 4168305.09,
+      "measurements": [
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979232.661,
+          "sigma_mgal": 0.004
+        },
+        {
+          "epoch": "1982-09",
+          "gravity_mgal": 979232.662,
+          "sigma_mgal": 0.0028
+        },
+        {
+          "epoch": "1983-07",
+          "gravity_mgal": 979232.656,
+          "sigma_mgal": 0.0036
+        },
+        {
+          "epoch": "1984-07",
+          "gravity_mgal": 979232.66,
+          "sigma_mgal": 0.0039
+        },
+        {
+          "epoch": "1998-07",
+          "gravity_mgal": 979232.605,
+          "sigma_mgal": 0.007
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979232.581,
+          "sigma_mgal": 0.009
+        }
+      ]
+    },
+    {
+      "station_id": "3JD1952",
+      "easting_m": 342363.47,
+      "northing_m": 4172531.1,
+      "measurements": [
+        {
+          "epoch": "1980-06",
+          "gravity_mgal": 979276.046,
+          "sigma_mgal": 0.0002
+        },
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979276.013,
+          "sigma_mgal": 0.006
+        },
+        {
+          "epoch": "1983-07",
+          "gravity_mgal": 979276.002,
+          "sigma_mgal": 0.005
+        },
+        {
+          "epoch": "1984-07",
+          "gravity_mgal": 979275.996,
+          "sigma_mgal": 0.0066
+        },
+        {
+          "epoch": "1998-07",
+          "gravity_mgal": 979275.983,
+          "sigma_mgal": 0.013
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979275.968,
+          "sigma_mgal": 0.004
+        }
+      ]
+    },
+    {
+      "station_id": "4JD1952",
+      "easting_m": 344644.06,
+      "northing_m": 4173719.96,
+      "measurements": [
+        {
+          "epoch": "1980-06",
+          "gravity_mgal": 979285.746,
+          "sigma_mgal": 0.0002
+        },
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979285.712,
+          "sigma_mgal": 0.004
+        },
+        {
+          "epoch": "1982-09",
+          "gravity_mgal": 979285.704,
+          "sigma_mgal": 0.0066
+        },
+        {
+          "epoch": "1983-07",
+          "gravity_mgal": 979285.689,
+          "sigma_mgal": 0.0058
+        },
+        {
+          "epoch": "1984-07",
+          "gravity_mgal": 979285.691,
+          "sigma_mgal": 0.0121
+        },
+        {
+          "epoch": "1998-07",
+          "gravity_mgal": 979285.708,
+          "sigma_mgal": 0.006
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979285.682,
+          "sigma_mgal": 0.004
+        }
+      ]
+    },
+    {
+      "station_id": "5JCM82",
+      "easting_m": 324333.68,
+      "northing_m": 4169320.3,
+      "measurements": [
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979206.986,
+          "sigma_mgal": 0.007
+        },
+        {
+          "epoch": "1982-09",
+          "gravity_mgal": 979206.979,
+          "sigma_mgal": 0.0038
+        },
+        {
+          "epoch": "1983-07",
+          "gravity_mgal": 979207.011,
+          "sigma_mgal": 0.0058
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979206.927,
+          "sigma_mgal": 0.013
+        }
+      ]
+    },
+    {
+      "station_id": "6DOR75",
+      "easting_m": 342544.68,
+      "northing_m": 4161183.78,
+      "measurements": [
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979299.354,
+          "sigma_mgal": 0.006
+        },
+        {
+          "epoch": "1983-07",
+          "gravity_mgal": 979299.334,
+          "sigma_mgal": 0.0028
+        },
+        {
+          "epoch": "1984-07",
+          "gravity_mgal": 979299.376,
+          "sigma_mgal": 0.0082
+        },
+        {
+          "epoch": "1998-07",
+          "gravity_mgal": 979299.336,
+          "sigma_mgal": 0.006
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979299.308,
+          "sigma_mgal": 0.003
+        }
+      ]
+    },
+    {
+      "station_id": "A124REST",
+      "easting_m": 335575.89,
+      "northing_m": 4166125.4,
+      "measurements": [
+        {
+          "epoch": "1980-06",
+          "gravity_mgal": 979268.875,
+          "sigma_mgal": 0.0002
+        },
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979268.816,
+          "sigma_mgal": 0.007
+        },
+        {
+          "epoch": "1983-07",
+          "gravity_mgal": 979268.808,
+          "sigma_mgal": 0.0065
+        },
+        {
+          "epoch": "1984-07",
+          "gravity_mgal": 979268.809,
+          "sigma_mgal": 0.0076
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979268.771,
+          "sigma_mgal": 0.01
+        }
+      ]
+    },
+    {
+      "station_id": "CONVICT",
+      "easting_m": 340248.21,
+      "northing_m": 4164402.24,
+      "measurements": [
+        {
+          "epoch": "1980-06",
+          "gravity_mgal": 979284.226,
+          "sigma_mgal": 0.0002
+        },
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979284.162,
+          "sigma_mgal": 0.004
+        },
+        {
+          "epoch": "1982-09",
+          "gravity_mgal": 979284.154,
+          "sigma_mgal": 0.0046
+        },
+        {
+          "epoch": "1983-07",
+          "gravity_mgal": 979284.156,
+          "sigma_mgal": 0.0051
+        },
+        {
+          "epoch": "1998-07",
+          "gravity_mgal": 979284.116,
+          "sigma_mgal": 0.01
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979284.069,
+          "sigma_mgal": 0.004
+        }
+      ]
+    },
+    {
+      "station_id": "D124",
+      "easting_m": 344672.23,
+      "northing_m": 4159700.73,
+      "measurements": [
+        {
+          "epoch": "1980-06",
+          "gravity_mgal": 979301.937,
+          "sigma_mgal": 0.0002
+        },
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979301.911,
+          "sigma_mgal": 0.004
+        },
+        {
+          "epoch": "1983-07",
+          "gravity_mgal": 979301.898,
+          "sigma_mgal": 0.0033
+        },
+        {
+          "epoch": "1998-07",
+          "gravity_mgal": 979301.852,
+          "sigma_mgal": 0.006
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979301.88,
+          "sigma_mgal": 0.009
+        }
+      ]
+    },
+    {
+      "station_id": "D916",
+      "easting_m": 328094.57,
+      "northing_m": 4174458.65,
+      "measurements": [
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979242.451,
+          "sigma_mgal": 0.005
+        },
+        {
+          "epoch": "1983-07",
+          "gravity_mgal": 979242.43,
+          "sigma_mgal": 0.0041
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979242.408,
+          "sigma_mgal": 0.009
+        }
+      ]
+    },
+    {
+      "station_id": "E124",
+      "easting_m": 347595.03,
+      "northing_m": 4158658.68,
+      "measurements": [
+        {
+          "epoch": "1980-06",
+          "gravity_mgal": 979283.042,
+          "sigma_mgal": 0.0002
+        },
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979283.02,
+          "sigma_mgal": 0.005
+        },
+        {
+          "epoch": "1998-07",
+          "gravity_mgal": 979283.001,
+          "sigma_mgal": 0.002
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979282.997,
+          "sigma_mgal": 0.005
+        }
+      ]
+    },
+    {
+      "station_id": "E916",
+      "easting_m": 329965.18,
+      "northing_m": 4179626.16,
+      "measurements": [
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979290.229,
+          "sigma_mgal": 0.004
+        },
+        {
+          "epoch": "1982-09",
+          "gravity_mgal": 979290.202,
+          "sigma_mgal": 0.0068
+        },
+        {
+          "epoch": "1983-07",
+          "gravity_mgal": 979290.199,
+          "sigma_mgal": 0.0042
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979290.166,
+          "sigma_mgal": 0.006
+        }
+      ]
+    },
+    {
+      "station_id": "FLOW",
+      "easting_m": 332710.85,
+      "northing_m": 4166338.21,
+      "measurements": [
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979264.465,
+          "sigma_mgal": 0.003
+        },
+        {
+          "epoch": "1983-07",
+          "gravity_mgal": 979264.411,
+          "sigma_mgal": 0.0035
+        },
+        {
+          "epoch": "1984-07",
+          "gravity_mgal": 979264.407,
+          "sigma_mgal": 0.0099
+        },
+        {
+          "epoch": "1985-07",
+          "gravity_mgal": 979264.384,
+          "sigma_mgal": 0.0042
+        },
+        {
+          "epoch": "1998-07",
+          "gravity_mgal": 979264.387,
+          "sigma_mgal": 0.01
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979264.386,
+          "sigma_mgal": 0.006
+        }
+      ]
+    },
+    {
+      "station_id": "HOT",
+      "easting_m": 309973.59,
+      "northing_m": 4200269.54,
+      "measurements": [
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979272.917,
+          "sigma_mgal": 0.004
+        },
+        {
+          "epoch": "1983-07",
+          "gravity_mgal": 979272.697,
+          "sigma_mgal": 0.0035
+        },
+        {
+          "epoch": "1984-07",
+          "gravity_mgal": 979272.7,
+          "sigma_mgal": 0.0086
+        },
+        {
+          "epoch": "1985-07",
+          "gravity_mgal": 979272.688,
+          "sigma_mgal": 0.0043
+        },
+        {
+          "epoch": "1998-07",
+          "gravity_mgal": 979272.854,
+          "sigma_mgal": 0.011
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979272.841,
+          "sigma_mgal": 0.004
+        }
+      ]
+    },
+    {
+      "station_id": "MLEQ01",
+      "easting_m": 340381.9,
+      "northing_m": 4168129.2,
+      "measurements": [
+        {
+          "epoch": "1980-06",
+          "gravity_mgal": 979275.941,
+          "sigma_mgal": 0.0066
+        },
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979275.966,
+          "sigma_mgal": 0.004
+        },
+        {
+          "epoch": "1982-09",
+          "gravity_mgal": 979275.926,
+          "sigma_mgal": 0.0068
+        },
+        {
+          "epoch": "1983-07",
+          "gravity_mgal": 979275.918,
+          "sigma_mgal": 0.0025
+        },
+        {
+          "epoch": "1984-07",
+          "gravity_mgal": 979275.934,
+          "sigma_mgal": 0.0081
+        },
+        {
+          "epoch": "1985-07",
+          "gravity_mgal": 979275.915,
+          "sigma_mgal": 0.0044
+        },
+        {
+          "epoch": "1998-07",
+          "gravity_mgal": 979275.927,
+          "sigma_mgal": 0.011
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979275.93,
+          "sigma_mgal": 0.003
+        }
+      ]
+    },
+    {
+      "station_id": "MLEQ02",
+      "easting_m": 330200.44,
+      "northing_m": 4169630.69,
+      "measurements": [
+        {
+          "epoch": "1980-06",
+          "gravity_mgal": 979258.731,
+          "sigma_mgal": 0.0046
+        },
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979258.851,
+          "sigma_mgal": 0.003
+        },
+        {
+          "epoch": "1982-09",
+          "gravity_mgal": 979258.663,
+          "sigma_mgal": 0.0026
+        },
+        {
+          "epoch": "1983-07",
+          "gravity_mgal": 979258.666,
+          "sigma_mgal": 0.0063
+        },
+        {
+          "epoch": "1984-07",
+          "gravity_mgal": 979258.719,
+          "sigma_mgal": 0.0095
+        },
+        {
+          "epoch": "1985-07",
+          "gravity_mgal": 979258.66,
+          "sigma_mgal": 0.0032
+        },
+        {
+          "epoch": "1998-07",
+          "gravity_mgal": 979258.745,
+          "sigma_mgal": 0.008
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979258.728,
+          "sigma_mgal": 0.005
+        }
+      ]
+    },
+    {
+      "station_id": "MLEQ03A",
+      "easting_m": 328462.44,
+      "northing_m": 4177303.91,
+      "measurements": [
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979192.608,
+          "sigma_mgal": 0.008
+        },
+        {
+          "epoch": "1982-09",
+          "gravity_mgal": 979192.577,
+          "sigma_mgal": 0.0073
+        },
+        {
+          "epoch": "1983-07",
+          "gravity_mgal": 979192.598,
+          "sigma_mgal": 0.0058
+        },
+        {
+          "epoch": "1984-07",
+          "gravity_mgal": 979192.596,
+          "sigma_mgal": 0.0092
+        },
+        {
+          "epoch": "1985-07",
+          "gravity_mgal": 979192.572,
+          "sigma_mgal": 0.0058
+        },
+        {
+          "epoch": "1998-07",
+          "gravity_mgal": 979192.529,
+          "sigma_mgal": 0.019
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979192.512,
+          "sigma_mgal": 0.01
+        }
+      ]
+    },
+    {
+      "station_id": "MLEQ05",
+      "easting_m": 346515.77,
+      "northing_m": 4146613.81,
+      "measurements": [
+        {
+          "epoch": "1980-06",
+          "gravity_mgal": 979287.576,
+          "sigma_mgal": 0.0051
+        },
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979287.34,
+          "sigma_mgal": 0.004
+        },
+        {
+          "epoch": "1982-09",
+          "gravity_mgal": 979287.558,
+          "sigma_mgal": 0.0058
+        },
+        {
+          "epoch": "1983-07",
+          "gravity_mgal": 979287.57,
+          "sigma_mgal": 0.0027
+        },
+        {
+          "epoch": "1984-07",
+          "gravity_mgal": 979287.546,
+          "sigma_mgal": 0.0038
+        },
+        {
+          "epoch": "1985-07",
+          "gravity_mgal": 979287.563,
+          "sigma_mgal": 0.0049
+        },
+        {
+          "epoch": "1998-07",
+          "gravity_mgal": 979287.301,
+          "sigma_mgal": 0.008
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979287.329,
+          "sigma_mgal": 0.006
+        }
+      ]
+    },
+    {
+      "station_id": "MLEQ06",
+      "easting_m": 337854.09,
+      "northing_m": 4168400.36,
+      "measurements": [
+        {
+          "epoch": "1980-06",
+          "gravity_mgal": 979311.272,
+          "sigma_mgal": 0.0071
+        },
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979311.297,
+          "sigma_mgal": 0.004
+        },
+        {
+          "epoch": "1982-09",
+          "gravity_mgal": 979311.278,
+          "sigma_mgal": 0.0043
+        },
+        {
+          "epoch": "1983-07",
+          "gravity_mgal": 979311.274,
+          "sigma_mgal": 0.0047
+        },
+        {
+          "epoch": "1984-07",
+          "gravity_mgal": 979311.272,
+          "sigma_mgal": 0.0045
+        },
+        {
+          "epoch": "1985-07",
+          "gravity_mgal": 979311.268,
+          "sigma_mgal": 0.0017
+        },
+        {
+          "epoch": "1998-07",
+          "gravity_mgal": 979311.295,
+          "sigma_mgal": 0.01
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979311.293,
+          "sigma_mgal": 0.004
+        }
+      ]
+    },
+    {
+      "station_id": "MLEQ11",
+      "easting_m": 328744.7,
+      "northing_m": 4181127.85,
+      "measurements": [
+        {
+          "epoch": "1980-06",
+          "gravity_mgal": 979128.314,
+          "sigma_mgal": 0.0092
+        },
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979128.305,
+          "sigma_mgal": 0.006
+        },
+        {
+          "epoch": "1983-07",
+          "gravity_mgal": 979128.322,
+          "sigma_mgal": 0.0081
+        },
+        {
+          "epoch": "1984-07",
+          "gravity_mgal": 979128.368,
+          "sigma_mgal": 0.011
+        },
+        {
+          "epoch": "1985-07",
+          "gravity_mgal": 979128.304,
+          "sigma_mgal": 0.0087
+        },
+        {
+          "epoch": "1998-07",
+          "gravity_mgal": 979128.3,
+          "sigma_mgal": 0.007
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979128.294,
+          "sigma_mgal": 0.004
+        }
+      ]
+    },
+    {
+      "station_id": "MLEQ13",
+      "easting_m": 329228.97,
+      "northing_m": 4166176.19,
+      "measurements": [
+        {
+          "epoch": "1980-06",
+          "gravity_mgal": 979324.253,
+          "sigma_mgal": 0.0054
+        },
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979324.252,
+          "sigma_mgal": 0.004
+        },
+        {
+          "epoch": "1982-09",
+          "gravity_mgal": 979324.243,
+          "sigma_mgal": 0.0046
+        },
+        {
+          "epoch": "1983-07",
+          "gravity_mgal": 979324.237,
+          "sigma_mgal": 0.0045
+        },
+        {
+          "epoch": "1984-07",
+          "gravity_mgal": 979324.245,
+          "sigma_mgal": 0.0043
+        },
+        {
+          "epoch": "1985-07",
+          "gravity_mgal": 979324.217,
+          "sigma_mgal": 0.0049
+        },
+        {
+          "epoch": "1998-07",
+          "gravity_mgal": 979324.249,
+          "sigma_mgal": 0.006
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979324.254,
+          "sigma_mgal": 0.005
+        }
+      ]
+    },
+    {
+      "station_id": "MLEQ14",
+      "easting_m": 358851.07,
+      "northing_m": 4167982.14,
+      "measurements": [
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979244.579,
+          "sigma_mgal": 0.004
+        },
+        {
+          "epoch": "1982-09",
+          "gravity_mgal": 979244.579,
+          "sigma_mgal": 0.0035
+        },
+        {
+          "epoch": "1983-07",
+          "gravity_mgal": 979244.577,
+          "sigma_mgal": 0.0041
+        },
+        {
+          "epoch": "1984-07",
+          "gravity_mgal": 979244.6,
+          "sigma_mgal": 0.0051
+        },
+        {
+          "epoch": "1985-07",
+          "gravity_mgal": 979244.566,
+          "sigma_mgal": 0.004
+        },
+        {
+          "epoch": "1998-07",
+          "gravity_mgal": 979244.493,
+          "sigma_mgal": 0.01
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979244.46,
+          "sigma_mgal": 0.012
+        }
+      ]
+    },
+    {
+      "station_id": "MLEQB1",
+      "easting_m": 350322.53,
+      "northing_m": 4158509.15,
+      "measurements": [
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979311.968,
+          "sigma_mgal": 0.003
+        },
+        {
+          "epoch": "1998-07",
+          "gravity_mgal": 979311.958,
+          "sigma_mgal": 0.005
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979311.964,
+          "sigma_mgal": 0.005
+        }
+      ]
+    },
+    {
+      "station_id": "X123",
+      "easting_m": 326136.14,
+      "northing_m": 4178629.24,
+      "measurements": [
+        {
+          "epoch": "1980-06",
+          "gravity_mgal": 979275.344,
+          "sigma_mgal": 0.0002
+        },
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979275.298,
+          "sigma_mgal": 0.004
+        },
+        {
+          "epoch": "1983-07",
+          "gravity_mgal": 979275.3,
+          "sigma_mgal": 0.0043
+        },
+        {
+          "epoch": "1998-07",
+          "gravity_mgal": 979275.246,
+          "sigma_mgal": 0.003
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979275.256,
+          "sigma_mgal": 0.015
+        }
+      ]
+    },
+    {
+      "station_id": "Y123",
+      "easting_m": 328785.78,
+      "northing_m": 4172912.38,
+      "measurements": [
+        {
+          "epoch": "1980-06",
+          "gravity_mgal": 979240.753,
+          "sigma_mgal": 0.0002
+        },
+        {
+          "epoch": "1982-06",
+          "gravity_mgal": 979240.707,
+          "sigma_mgal": 0.008
+        },
+        {
+          "epoch": "1983-07",
+          "gravity_mgal": 979240.697,
+          "sigma_mgal": 0.0038
+        },
+        {
+          "epoch": "1998-07",
+          "gravity_mgal": 979240.641,
+          "sigma_mgal": 0.003
+        },
+        {
+          "epoch": "1999-07",
+          "gravity_mgal": 979240.655,
+          "sigma_mgal": 0.008
+        }
+      ]
+    }
+  ],
+  "difference": {
+    "earlier_epoch": "1982-06",
+    "later_epoch": "1999-07",
+    "difference_convention": "later-minus-earlier",
+    "uncertainty_model": "independent epoch 1-sigma errors; covariance unavailable",
+    "stations": [
+      {
+        "station_id": "12DOR75",
+        "easting_m": 329558.81,
+        "northing_m": 4171897.32,
+        "earlier_gravity_mgal": 979242.333,
+        "earlier_sigma_mgal": 0.005,
+        "later_gravity_mgal": 979242.215,
+        "later_sigma_mgal": 0.012,
+        "delta_gravity_mgal": -0.1180000000167638,
+        "delta_sigma_independent_mgal": 0.013000000000000001,
+        "standardized_delta_independent": -9.0769230782126
+      },
+      {
+        "station_id": "12JCM82",
+        "easting_m": 330078.01,
+        "northing_m": 4175261.24,
+        "earlier_gravity_mgal": 979250.95,
+        "earlier_sigma_mgal": 0.006,
+        "later_gravity_mgal": 979250.854,
+        "later_sigma_mgal": 0.008,
+        "delta_gravity_mgal": -0.09599999990314245,
+        "delta_sigma_independent_mgal": 0.01,
+        "standardized_delta_independent": -9.599999990314245
+      },
+      {
+        "station_id": "15JCM82",
+        "easting_m": 332778.6,
+        "northing_m": 4174484.55,
+        "earlier_gravity_mgal": 979234.052,
+        "earlier_sigma_mgal": 0.006,
+        "later_gravity_mgal": 979233.963,
+        "later_sigma_mgal": 0.004,
+        "delta_gravity_mgal": -0.08900000003632158,
+        "delta_sigma_independent_mgal": 0.007211102550927979,
+        "standardized_delta_independent": -12.342079371048245
+      },
+      {
+        "station_id": "16JCM82",
+        "easting_m": 333520.47,
+        "northing_m": 4173659.22,
+        "earlier_gravity_mgal": 979253.378,
+        "earlier_sigma_mgal": 0.003,
+        "later_gravity_mgal": 979253.265,
+        "later_sigma_mgal": 0.005,
+        "delta_gravity_mgal": -0.1130000000121072,
+        "delta_sigma_independent_mgal": 0.0058309518948453,
+        "standardized_delta_independent": -19.379340123179865
+      },
+      {
+        "station_id": "17JCM82",
+        "easting_m": 333626.24,
+        "northing_m": 4171903.23,
+        "earlier_gravity_mgal": 979257.768,
+        "earlier_sigma_mgal": 0.006,
+        "later_gravity_mgal": 979257.712,
+        "later_sigma_mgal": 0.005,
+        "delta_gravity_mgal": -0.05599999998230487,
+        "delta_sigma_independent_mgal": 0.0078102496759066544,
+        "standardized_delta_independent": -7.170065273976546
+      },
+      {
+        "station_id": "1JD1952",
+        "easting_m": 340232.08,
+        "northing_m": 4166311.72,
+        "earlier_gravity_mgal": 979279.875,
+        "earlier_sigma_mgal": 0.004,
+        "later_gravity_mgal": 979279.815,
+        "later_sigma_mgal": 0.001,
+        "delta_gravity_mgal": -0.060000000055879354,
+        "delta_sigma_independent_mgal": 0.00412310562561766,
+        "standardized_delta_independent": -14.552137515732714
+      },
+      {
+        "station_id": "22JCM82",
+        "easting_m": 332215.26,
+        "northing_m": 4171065.92,
+        "earlier_gravity_mgal": 979236.305,
+        "earlier_sigma_mgal": 0.006,
+        "later_gravity_mgal": 979236.233,
+        "later_sigma_mgal": 0.007,
+        "delta_gravity_mgal": -0.07200000004377216,
+        "delta_sigma_independent_mgal": 0.009219544457292887,
+        "standardized_delta_independent": -7.80949648621938
+      },
+      {
+        "station_id": "23JCM82",
+        "easting_m": 331824.28,
+        "northing_m": 4170063.72,
+        "earlier_gravity_mgal": 979237.917,
+        "earlier_sigma_mgal": 0.005,
+        "later_gravity_mgal": 979237.834,
+        "later_sigma_mgal": 0.005,
+        "delta_gravity_mgal": -0.08299999998416752,
+        "delta_sigma_independent_mgal": 0.007071067811865475,
+        "standardized_delta_independent": -11.737972565457637
+      },
+      {
+        "station_id": "24DOR75",
+        "easting_m": 336407.05,
+        "northing_m": 4178663.26,
+        "earlier_gravity_mgal": 979286.631,
+        "earlier_sigma_mgal": 0.005,
+        "later_gravity_mgal": 979286.548,
+        "later_sigma_mgal": 0.012,
+        "delta_gravity_mgal": -0.08300000010058284,
+        "delta_sigma_independent_mgal": 0.013000000000000001,
+        "standardized_delta_independent": -6.384615392352526
+      },
+      {
+        "station_id": "25JCM82",
+        "easting_m": 336091.36,
+        "northing_m": 4172531.07,
+        "earlier_gravity_mgal": 979266.463,
+        "earlier_sigma_mgal": 0.007,
+        "later_gravity_mgal": 979266.348,
+        "later_sigma_mgal": 0.009,
+        "delta_gravity_mgal": -0.11499999999068677,
+        "delta_sigma_independent_mgal": 0.011401754250991379,
+        "standardized_delta_independent": -10.086167221214012
+      },
+      {
+        "station_id": "2JCM82",
+        "easting_m": 328808.72,
+        "northing_m": 4167627.96,
+        "earlier_gravity_mgal": 979242.013,
+        "earlier_sigma_mgal": 0.006,
+        "later_gravity_mgal": 979241.914,
+        "later_sigma_mgal": 0.008,
+        "delta_gravity_mgal": -0.0990000000456348,
+        "delta_sigma_independent_mgal": 0.01,
+        "standardized_delta_independent": -9.90000000456348
+      },
+      {
+        "station_id": "2JD1952",
+        "easting_m": 340271.97,
+        "northing_m": 4170662.09,
+        "earlier_gravity_mgal": 979277.161,
+        "earlier_sigma_mgal": 0.004,
+        "later_gravity_mgal": 979277.137,
+        "later_sigma_mgal": 0.006,
+        "delta_gravity_mgal": -0.023999999975785613,
+        "delta_sigma_independent_mgal": 0.007211102550927979,
+        "standardized_delta_independent": -3.328201173993443
+      },
+      {
+        "station_id": "39DOR75",
+        "easting_m": 340137.81,
+        "northing_m": 4176492.17,
+        "earlier_gravity_mgal": 979276.264,
+        "earlier_sigma_mgal": 0.005,
+        "later_gravity_mgal": 979276.204,
+        "later_sigma_mgal": 0.006,
+        "delta_gravity_mgal": -0.05999999993946403,
+        "delta_sigma_independent_mgal": 0.0078102496759066544,
+        "standardized_delta_independent": -7.682212788222922
+      },
+      {
+        "station_id": "3JCM82",
+        "easting_m": 327207.4,
+        "northing_m": 4168305.09,
+        "earlier_gravity_mgal": 979232.661,
+        "earlier_sigma_mgal": 0.004,
+        "later_gravity_mgal": 979232.581,
+        "later_sigma_mgal": 0.009,
+        "delta_gravity_mgal": -0.07999999995809048,
+        "delta_sigma_independent_mgal": 0.009848857801796104,
+        "standardized_delta_independent": -8.122769316813686
+      },
+      {
+        "station_id": "3JD1952",
+        "easting_m": 342363.47,
+        "northing_m": 4172531.1,
+        "earlier_gravity_mgal": 979276.013,
+        "earlier_sigma_mgal": 0.006,
+        "later_gravity_mgal": 979275.968,
+        "later_sigma_mgal": 0.004,
+        "delta_gravity_mgal": -0.045000000041909516,
+        "delta_sigma_independent_mgal": 0.007211102550927979,
+        "standardized_delta_independent": -6.2403772133456314
+      },
+      {
+        "station_id": "4JD1952",
+        "easting_m": 344644.06,
+        "northing_m": 4173719.96,
+        "earlier_gravity_mgal": 979285.712,
+        "earlier_sigma_mgal": 0.004,
+        "later_gravity_mgal": 979285.682,
+        "later_sigma_mgal": 0.004,
+        "delta_gravity_mgal": -0.030000000027939677,
+        "delta_sigma_independent_mgal": 0.00565685424949238,
+        "standardized_delta_independent": -5.30330086383819
+      },
+      {
+        "station_id": "5JCM82",
+        "easting_m": 324333.68,
+        "northing_m": 4169320.3,
+        "earlier_gravity_mgal": 979206.986,
+        "earlier_sigma_mgal": 0.007,
+        "later_gravity_mgal": 979206.927,
+        "later_sigma_mgal": 0.013,
+        "delta_gravity_mgal": -0.0590000000083819,
+        "delta_sigma_independent_mgal": 0.0147648230602334,
+        "standardized_delta_independent": -3.995984223291413
+      },
+      {
+        "station_id": "6DOR75",
+        "easting_m": 342544.68,
+        "northing_m": 4161183.78,
+        "earlier_gravity_mgal": 979299.354,
+        "earlier_sigma_mgal": 0.006,
+        "later_gravity_mgal": 979299.308,
+        "later_sigma_mgal": 0.003,
+        "delta_gravity_mgal": -0.04600000008940697,
+        "delta_sigma_independent_mgal": 0.00670820393249937,
+        "standardized_delta_independent": -6.8572751443273585
+      },
+      {
+        "station_id": "A124REST",
+        "easting_m": 335575.89,
+        "northing_m": 4166125.4,
+        "earlier_gravity_mgal": 979268.816,
+        "earlier_sigma_mgal": 0.007,
+        "later_gravity_mgal": 979268.771,
+        "later_sigma_mgal": 0.01,
+        "delta_gravity_mgal": -0.045000000041909516,
+        "delta_sigma_independent_mgal": 0.012206555615733703,
+        "standardized_delta_independent": -3.6865436457690435
+      },
+      {
+        "station_id": "CONVICT",
+        "easting_m": 340248.21,
+        "northing_m": 4164402.24,
+        "earlier_gravity_mgal": 979284.162,
+        "earlier_sigma_mgal": 0.004,
+        "later_gravity_mgal": 979284.069,
+        "later_sigma_mgal": 0.004,
+        "delta_gravity_mgal": -0.09299999999348074,
+        "delta_sigma_independent_mgal": 0.00565685424949238,
+        "standardized_delta_independent": -16.440232661434777
+      },
+      {
+        "station_id": "D124",
+        "easting_m": 344672.23,
+        "northing_m": 4159700.73,
+        "earlier_gravity_mgal": 979301.911,
+        "earlier_sigma_mgal": 0.004,
+        "later_gravity_mgal": 979301.88,
+        "later_sigma_mgal": 0.009,
+        "delta_gravity_mgal": -0.030999999959021807,
+        "delta_sigma_independent_mgal": 0.009848857801796104,
+        "standardized_delta_independent": -3.147573107753514
+      },
+      {
+        "station_id": "D916",
+        "easting_m": 328094.57,
+        "northing_m": 4174458.65,
+        "earlier_gravity_mgal": 979242.451,
+        "earlier_sigma_mgal": 0.005,
+        "later_gravity_mgal": 979242.408,
+        "later_sigma_mgal": 0.009,
+        "delta_gravity_mgal": -0.04299999994691461,
+        "delta_sigma_independent_mgal": 0.010295630140987,
+        "standardized_delta_independent": -4.176529202980127
+      },
+      {
+        "station_id": "E124",
+        "easting_m": 347595.03,
+        "northing_m": 4158658.68,
+        "earlier_gravity_mgal": 979283.02,
+        "earlier_sigma_mgal": 0.005,
+        "later_gravity_mgal": 979282.997,
+        "later_sigma_mgal": 0.005,
+        "delta_gravity_mgal": -0.023000000044703484,
+        "delta_sigma_independent_mgal": 0.007071067811865475,
+        "standardized_delta_independent": -3.2526911997801458
+      },
+      {
+        "station_id": "E916",
+        "easting_m": 329965.18,
+        "northing_m": 4179626.16,
+        "earlier_gravity_mgal": 979290.229,
+        "earlier_sigma_mgal": 0.004,
+        "later_gravity_mgal": 979290.166,
+        "later_sigma_mgal": 0.006,
+        "delta_gravity_mgal": -0.06300000008195639,
+        "delta_sigma_independent_mgal": 0.007211102550927979,
+        "standardized_delta_independent": -8.736528101912665
+      },
+      {
+        "station_id": "FLOW",
+        "easting_m": 332710.85,
+        "northing_m": 4166338.21,
+        "earlier_gravity_mgal": 979264.465,
+        "earlier_sigma_mgal": 0.003,
+        "later_gravity_mgal": 979264.386,
+        "later_sigma_mgal": 0.006,
+        "delta_gravity_mgal": -0.07899999991059303,
+        "delta_sigma_independent_mgal": 0.00670820393249937,
+        "standardized_delta_independent": -11.776624668170887
+      },
+      {
+        "station_id": "HOT",
+        "easting_m": 309973.59,
+        "northing_m": 4200269.54,
+        "earlier_gravity_mgal": 979272.917,
+        "earlier_sigma_mgal": 0.004,
+        "later_gravity_mgal": 979272.841,
+        "later_sigma_mgal": 0.004,
+        "delta_gravity_mgal": -0.07600000000093132,
+        "delta_sigma_independent_mgal": 0.00565685424949238,
+        "standardized_delta_independent": -13.43502884270904
+      },
+      {
+        "station_id": "MLEQ01",
+        "easting_m": 340381.9,
+        "northing_m": 4168129.2,
+        "earlier_gravity_mgal": 979275.966,
+        "earlier_sigma_mgal": 0.004,
+        "later_gravity_mgal": 979275.93,
+        "later_sigma_mgal": 0.003,
+        "delta_gravity_mgal": -0.03599999996367842,
+        "delta_sigma_independent_mgal": 0.005,
+        "standardized_delta_independent": -7.199999992735684
+      },
+      {
+        "station_id": "MLEQ02",
+        "easting_m": 330200.44,
+        "northing_m": 4169630.69,
+        "earlier_gravity_mgal": 979258.851,
+        "earlier_sigma_mgal": 0.003,
+        "later_gravity_mgal": 979258.728,
+        "later_sigma_mgal": 0.005,
+        "delta_gravity_mgal": -0.12300000002142042,
+        "delta_sigma_independent_mgal": 0.0058309518948453,
+        "standardized_delta_independent": -21.09432597620216
+      },
+      {
+        "station_id": "MLEQ03A",
+        "easting_m": 328462.44,
+        "northing_m": 4177303.91,
+        "earlier_gravity_mgal": 979192.608,
+        "earlier_sigma_mgal": 0.008,
+        "later_gravity_mgal": 979192.512,
+        "later_sigma_mgal": 0.01,
+        "delta_gravity_mgal": -0.09600000001955777,
+        "delta_sigma_independent_mgal": 0.012806248474865698,
+        "standardized_delta_independent": -7.496340572180296
+      },
+      {
+        "station_id": "MLEQ05",
+        "easting_m": 346515.77,
+        "northing_m": 4146613.81,
+        "earlier_gravity_mgal": 979287.34,
+        "earlier_sigma_mgal": 0.004,
+        "later_gravity_mgal": 979287.329,
+        "later_sigma_mgal": 0.006,
+        "delta_gravity_mgal": -0.010999999940395355,
+        "delta_sigma_independent_mgal": 0.007211102550927979,
+        "standardized_delta_independent": -1.5254255313537028
+      },
+      {
+        "station_id": "MLEQ06",
+        "easting_m": 337854.09,
+        "northing_m": 4168400.36,
+        "earlier_gravity_mgal": 979311.297,
+        "earlier_sigma_mgal": 0.004,
+        "later_gravity_mgal": 979311.293,
+        "later_sigma_mgal": 0.004,
+        "delta_gravity_mgal": -0.004000000073574483,
+        "delta_sigma_independent_mgal": 0.00565685424949238,
+        "standardized_delta_independent": -0.7071067941928015
+      },
+      {
+        "station_id": "MLEQ11",
+        "easting_m": 328744.7,
+        "northing_m": 4181127.85,
+        "earlier_gravity_mgal": 979128.305,
+        "earlier_sigma_mgal": 0.006,
+        "later_gravity_mgal": 979128.294,
+        "later_sigma_mgal": 0.004,
+        "delta_gravity_mgal": -0.011000000056810677,
+        "delta_sigma_independent_mgal": 0.007211102550927979,
+        "standardized_delta_independent": -1.5254255474976035
+      },
+      {
+        "station_id": "MLEQ13",
+        "easting_m": 329228.97,
+        "northing_m": 4166176.19,
+        "earlier_gravity_mgal": 979324.252,
+        "earlier_sigma_mgal": 0.004,
+        "later_gravity_mgal": 979324.254,
+        "later_sigma_mgal": 0.005,
+        "delta_gravity_mgal": 0.001999999978579581,
+        "delta_sigma_independent_mgal": 0.006403124237432849,
+        "standardized_delta_independent": 0.31234752043190467
+      },
+      {
+        "station_id": "MLEQ14",
+        "easting_m": 358851.07,
+        "northing_m": 4167982.14,
+        "earlier_gravity_mgal": 979244.579,
+        "earlier_sigma_mgal": 0.004,
+        "later_gravity_mgal": 979244.46,
+        "later_sigma_mgal": 0.012,
+        "delta_gravity_mgal": -0.11900000006426126,
+        "delta_sigma_independent_mgal": 0.012649110640673518,
+        "standardized_delta_independent": -9.407776044081228
+      },
+      {
+        "station_id": "MLEQB1",
+        "easting_m": 350322.53,
+        "northing_m": 4158509.15,
+        "earlier_gravity_mgal": 979311.968,
+        "earlier_sigma_mgal": 0.003,
+        "later_gravity_mgal": 979311.964,
+        "later_sigma_mgal": 0.005,
+        "delta_gravity_mgal": -0.003999999957159162,
+        "delta_sigma_independent_mgal": 0.0058309518948453,
+        "standardized_delta_independent": -0.6859943332228922
+      },
+      {
+        "station_id": "X123",
+        "easting_m": 326136.14,
+        "northing_m": 4178629.24,
+        "earlier_gravity_mgal": 979275.298,
+        "earlier_sigma_mgal": 0.004,
+        "later_gravity_mgal": 979275.256,
+        "later_sigma_mgal": 0.015,
+        "delta_gravity_mgal": -0.04199999989941716,
+        "delta_sigma_independent_mgal": 0.015524174696260024,
+        "standardized_delta_independent": -2.7054578244043794
+      },
+      {
+        "station_id": "Y123",
+        "easting_m": 328785.78,
+        "northing_m": 4172912.38,
+        "earlier_gravity_mgal": 979240.707,
+        "earlier_sigma_mgal": 0.008,
+        "later_gravity_mgal": 979240.655,
+        "later_sigma_mgal": 0.008,
+        "delta_gravity_mgal": -0.05200000002514571,
+        "delta_sigma_independent_mgal": 0.01131370849898476,
+        "standardized_delta_independent": -4.596194079935147
+      }
+    ]
+  }
+}

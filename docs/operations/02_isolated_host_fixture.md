@@ -1,5 +1,7 @@
 # Isolated Linux recovery fixture: main-owned nongate recipe
 
+Current operating contract: this optional historical fixture and its frozen30% guard are not current-release prerequisites. SMTP and off-host backup/deletion authority are deferred for the owner-tested deployment. Actual release/project/job capacity and scientific/ownership/UI/native resource controls remain required; old failed receipts are preserved, not relabelled.
+
 Status: code/local tests belong to the ops unit; actual Linux execution by this unit **NOT RUN**. Main owns installation, review, execution and every private host receipt. A completed disposable fixture is **nongate** evidence: it cannot close disk/admission/release, production key escrow, independently durable off-host deletion history, actual-user recovery, SMTP or live activation gates. No production change, global upgrade, service control or installer is performed by the harness.
 
 The [separate fixture SDD](../design/features/ops-host-fixture/requirements.md) was declared after strict adapter handoff `fb3895e`. [Core operations](01_backup_restore.md) still enforce exact 0003 DDL, strict MT formats, authenticated bounded archives, fresh coherent maintenance and independently latest authority for production recovery. Fixture-only archives still cannot be restored as host archives. `--prepare-state` emits ordinary private application state, not a backup archive; later host-mode capture has genuine Linux systemd observations for this NEW disposable state only.

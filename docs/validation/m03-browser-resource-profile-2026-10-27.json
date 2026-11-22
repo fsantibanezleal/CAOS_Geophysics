@@ -1,0 +1,118 @@
+{
+  "schema": "caos.m03-browser-resource-profile.v1",
+  "status": "measured-authored-control-only",
+  "measured_at": "2026-10-27T16:38:58.947Z",
+  "browser": "Chromium 153.0.8010.12",
+  "viewport_css_px": [
+    1280,
+    900
+  ],
+  "dataset": {
+    "row_count": 25000,
+    "csv_bytes": 1040828,
+    "csv_sha256": "6351c120544b6b60cc62a33ae449572e3f8bb45a2f3a5c8d3fc52fc23b9b9364",
+    "source": "authored deterministic parallel-line survey; not field data"
+  },
+  "settings": {
+    "grid_spacing_m": 250,
+    "holdout_fraction": 0.2,
+    "seed": "M03-resource-profile-2026-10-27"
+  },
+  "device": {
+    "user_agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) HeadlessChrome/153.0.8010.12 Safari/537.36",
+    "hardware_concurrency": 32,
+    "device_memory_gib": 32
+  },
+  "implementation": {
+    "worker_source_sha256": "6b30f380f42e3e2fc054b69a38528661cd2787980ee106d6693e9db74ff6b711",
+    "python_pipeline_sha256": "7f07270fa0c2a6919498d818581e9361e798b7d6036d6fe9c0629c5deef076ca"
+  },
+  "memory": {
+    "wasm_linear_heap_capacity_bytes_by_run": [
+      187695104,
+      187695104,
+      187695104,
+      187695104
+    ],
+    "js_heap_used_before_and_after_bytes": [
+      23100000,
+      23100000
+    ],
+    "js_heap_peak_observed_bytes": 23100000,
+    "limitations": [
+      "WASM linear heap capacity is the Pyodide allocator high-water capacity, not total browser process RSS.",
+      "The JS heap sample is main-thread performance.memory where Chromium exposes it; it does not include worker RSS.",
+      "One local headless Chromium host is not a supported-device population."
+    ]
+  },
+  "runs": [
+    {
+      "ordinal": 0,
+      "wall_ms": 8827.300000011921,
+      "runtime_reused": false,
+      "runtime_load_ms": 3582.199999988079,
+      "processing_ms": 5158.300000011921,
+      "total_worker_ms": 8742.899999976158,
+      "wasm_heap_capacity_bytes": 187695104,
+      "original_csv_sha256": "6351c120544b6b60cc62a33ae449572e3f8bb45a2f3a5c8d3fc52fc23b9b9364",
+      "python_pipeline_sha256": "7f07270fa0c2a6919498d818581e9361e798b7d6036d6fe9c0629c5deef076ca",
+      "heldout_rows": 5000,
+      "supported_heldout_rows": 5000,
+      "grid_shape_yx": [
+        200,
+        10
+      ]
+    },
+    {
+      "ordinal": 1,
+      "wall_ms": 2118.600000023842,
+      "runtime_reused": true,
+      "runtime_load_ms": 0,
+      "processing_ms": 2111.300000011921,
+      "total_worker_ms": 2116.599999964237,
+      "wasm_heap_capacity_bytes": 187695104,
+      "original_csv_sha256": "6351c120544b6b60cc62a33ae449572e3f8bb45a2f3a5c8d3fc52fc23b9b9364",
+      "python_pipeline_sha256": "7f07270fa0c2a6919498d818581e9361e798b7d6036d6fe9c0629c5deef076ca",
+      "heldout_rows": 5000,
+      "supported_heldout_rows": 5000,
+      "grid_shape_yx": [
+        200,
+        10
+      ]
+    },
+    {
+      "ordinal": 2,
+      "wall_ms": 2013.5,
+      "runtime_reused": true,
+      "runtime_load_ms": 0,
+      "processing_ms": 2008.699999988079,
+      "total_worker_ms": 2011.300000011921,
+      "wasm_heap_capacity_bytes": 187695104,
+      "original_csv_sha256": "6351c120544b6b60cc62a33ae449572e3f8bb45a2f3a5c8d3fc52fc23b9b9364",
+      "python_pipeline_sha256": "7f07270fa0c2a6919498d818581e9361e798b7d6036d6fe9c0629c5deef076ca",
+      "heldout_rows": 5000,
+      "supported_heldout_rows": 5000,
+      "grid_shape_yx": [
+        200,
+        10
+      ]
+    },
+    {
+      "ordinal": 3,
+      "wall_ms": 2087.599999964237,
+      "runtime_reused": true,
+      "runtime_load_ms": 0,
+      "processing_ms": 2084.300000011921,
+      "total_worker_ms": 2086,
+      "wasm_heap_capacity_bytes": 187695104,
+      "original_csv_sha256": "6351c120544b6b60cc62a33ae449572e3f8bb45a2f3a5c8d3fc52fc23b9b9364",
+      "python_pipeline_sha256": "7f07270fa0c2a6919498d818581e9361e798b7d6036d6fe9c0629c5deef076ca",
+      "heldout_rows": 5000,
+      "supported_heldout_rows": 5000,
+      "grid_shape_yx": [
+        200,
+        10
+      ]
+    }
+  ]
+}

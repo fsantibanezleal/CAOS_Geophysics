@@ -9,6 +9,7 @@ waveform; only valid rows receive a binary trace.
 from __future__ import annotations
 
 import argparse
+import gzip
 import hashlib
 import json
 from pathlib import Path
@@ -35,7 +36,20 @@ SOURCE = {
     "original_url": "https://github.com/smousavi05/STEAD",
     "mirror_url": "https://seisbench.gfz-potsdam.de/mirror/datasets/stead/",
     "license": "CC BY 4.0",
-    "license_url": "https://github.com/smousavi05/STEAD/blob/master/LICENSE",
+    "license_url": "https://github.com/smousavi05/STEAD/blob/e6f247cf174e4aaefe01a6fcc72a0e88296d42b4/LICENSE",
+    "redistribution": {
+        "decision": "approved-with-attribution",
+        "license": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0/",
+        "review": "docs/design/features/phase-picking/rights-review-2026-10-28.md",
+        "attribution_file": "ATTRIBUTION.md",
+        "upstream_license_commit": "e6f247cf174e4aaefe01a6fcc72a0e88296d42b4",
+        "upstream_license_blob_sha1": "da6ab6cc8f333d7e89a99812866df8f24374d47c",
+        "upstream_license_sha256": "9ba9550ad48438d0836ddab3da480b3b69ffa0aac7b7878b5a0039e7ab429411",
+        "seisbench_commit": "e5616ad33c00aba75d5130b44222df46b41e4094",
+        "seisbench_stead_blob_sha1": "95e8aeb8879e3bf022abe912dcd9fdc4a5692900",
+        "mirror_license_sha256": "5601afa9da212eb94b3a15aec1a17331c4e9e74230b093ab5428405684ae4e8f",
+    },
     "modification": (
         "Metadata-only event/station-disjoint selection; source ZNE counts reordered ENZ; "
         "QC rejects flat or exactly duplicated components; valid traces mean-removed and "
@@ -118,7 +132,9 @@ def export(
     destination_root.mkdir(parents=True, exist_ok=True)
     with tempfile.TemporaryDirectory(prefix=".stead-assets-", dir=destination_root) as temporary:
         staged = Path(temporary)
-        shutil.copyfile(onnx_path, staged / "model.onnx")
+        model_bytes = onnx_path.read_bytes()
+        compressed_model = gzip.compress(model_bytes, compresslevel=9, mtime=0)
+        (staged / "model.onnx.gz").write_bytes(compressed_model)
         shutil.copyfile(heldout_report_path, staged / "benchmark.json")
         records = []
         valid_count = 0
@@ -180,8 +196,10 @@ def export(
             },
             "output": {"shape": [1, 3, 6000], "classes": ["N", "P", "S"]},
             "model": {
-                "file": "model.onnx", "sha256": model_hash,
-                "bytes": (staged / "model.onnx").stat().st_size,
+                "file": "model.onnx", "source_file": "model.onnx.gz",
+                "sha256": model_hash, "bytes": len(model_bytes),
+                "source_sha256": hashlib.sha256(compressed_model).hexdigest(),
+                "source_bytes": len(compressed_model),
                 "checkpoint_sha256": checkpoint_hash,
                 "thresholds": native["thresholds"],
                 "peak_rule": "global class argmax above threshold; S abstains when S-P < 0.4 s",

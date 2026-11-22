@@ -1,0 +1,40 @@
+{
+  "schema": "caos.m13-browser-live-e2e/v1",
+  "status": "pass",
+  "measured_at_utc": "2026-11-06T02:33:09.959Z",
+  "local_date": "2026-11-05",
+  "source_commit": "2c82271ddf774ced86469579922a87e611312656",
+  "production_build": {
+    "command": "npm run build",
+    "status": "pass",
+    "vite_build": "7.3.7",
+    "transformed_modules": 1945,
+    "dist_files": 316,
+    "dist_bytes": 1045983916,
+    "index_sha256": "68742e83e31314b415f36e5500962bb9083e40a7f2bb57c9871d5d1ea2b9979c"
+  },
+  "browser_interaction": {
+    "command": "npx playwright test -c playwright.phase-picker.config.ts",
+    "status": "pass",
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "flaky": 0,
+    "duration_ms": 52223.465,
+    "viewport": "1440x1000",
+    "test": "M13 runs a hash-verified held-out STEAD trace in-browser and exports valid model scores",
+    "test_sha256": "b64fd96474f1fdaca866d300826bf9be740acf7c2d41e54f5232a444fae69be8"
+  },
+  "heldout_asset_identity": {
+    "manifest_sha256": "3e8fac54427eeb5525c70317c508d1f55188deac3a5964ad78931561fe3c32f0",
+    "model_sha256": "4e5962ed0a9037e545991c218ae770ae7aff2c01f1e6a919c338705780ce5f4c"
+  },
+  "source_hashes": {
+    "phase_picker_panel_sha256": "90611d9e23f8740a30e953b87388006c34623e784fd0ddb40879e5a1180f6c10"
+  },
+  "limitations": [
+    "One preselected QC-valid real STEAD trace was exercised by the UI test.",
+    "The 23-trace population parity receipt is same-checkpoint CPU ONNX versus browser WASM, not PyTorch-oracle parity or accuracy evaluation.",
+    "This is not full product acceptance or deployment verification."
+  ]
+}

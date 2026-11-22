@@ -19,8 +19,9 @@ import tempfile
 import time
 
 import numpy as np
+from profile_mesh import parameter_mesh
 
-from sources import ROOT, SourceError, acquire_source
+from sources import SourceError, acquire_source, local_data_root
 
 SOURCE_ID = "pygimli-slagdump"
 COUNT_SENSOR = re.compile(r"^(\d+)# Number of sensors$")
@@ -72,6 +73,21 @@ def parse_ohm(path: Path) -> Survey:
         lines = path.read_text(encoding="utf-8").splitlines()
     except (OSError, UnicodeError) as error:
         raise ERTError(f"{path}: cannot read UTF-8 .ohm: {error}") from error
+    return _parse_ohm_lines(lines)
+
+
+def parse_ohm_bytes(raw: bytes) -> Survey:
+    """Use the identical grammar on bounded immutable original bytes."""
+    if type(raw) is not bytes or len(raw) > MAX_INPUT_BYTES:
+        raise ERTError(".ohm original exceeds byte boundary")
+    try:
+        lines = raw.decode("utf-8").splitlines()
+    except UnicodeError as error:
+        raise ERTError(".ohm original is not UTF-8") from error
+    return _parse_ohm_lines(lines)
+
+
+def _parse_ohm_lines(lines: list[str]) -> Survey:
     index = 0
     comments = []
     while index < len(lines) and lines[index].startswith("#"):
@@ -260,6 +276,14 @@ def _rmse_log(predicted: np.ndarray, observed: np.ndarray) -> float:
     return float(np.sqrt(np.mean((np.log(predicted) - np.log(observed)) ** 2)))
 
 
+def assumed_resistance_sigma(resistance_ohm: np.ndarray) -> np.ndarray:
+    """Return the disclosed local error floor; it is not a source-calibrated uncertainty."""
+    values = np.asarray(resistance_ohm, dtype=float)
+    if values.ndim != 1 or not len(values) or not np.isfinite(values).all() or np.any(values <= 0):
+        raise ERTError("assumed weighting requires a finite positive resistance vector")
+    return np.maximum(0.03 * np.abs(values), 0.001)
+
+
 def _mesh_sha256(mesh) -> str:
     """Fingerprint physical geometry, ignoring node IDs and round-off noise."""
     def position(node) -> tuple[float, float, float]:
@@ -337,7 +361,7 @@ def run(path: Path, *, source_sha256: str, allow_inverse: bool = True) -> dict:
         raise ERTError("positive resistance produced nonpositive apparent resistivity")
     training, held = holdout_indices(survey)
     blocked_training, blocked_held = blocked_holdout_indices(survey)
-    sigma_r = np.maximum(0.03 * np.abs(resistance), 0.001)
+    sigma_r = assumed_resistance_sigma(resistance)
     full["k"] = topo_k
     full["rhoa"] = apparent
     full["err"] = sigma_r / resistance
@@ -426,6 +450,7 @@ def run(path: Path, *, source_sha256: str, allow_inverse: bool = True) -> dict:
         report["inverse"] = {
             "mesh_cells": int(mgr.fop.paraDomain.cellCount()), "model_resistivity_ohm_m": model.tolist(),
             "model_cell_center_xz_m": cell_centers,
+            "parameter_mesh": parameter_mesh(mgr.fop.paraDomain),
             "parameter_mesh_sha256": parameter_mesh_sha256,
             "forward_mesh_sha256": forward_mesh_sha256,
             "model_range_ohm_m": [float(np.min(model)), float(np.max(model))],
@@ -478,9 +503,9 @@ def run(path: Path, *, source_sha256: str, allow_inverse: bool = True) -> dict:
     return report
 
 
-def run_source(*, root: Path = ROOT, qc_only: bool = False) -> dict:
+def run_source(*, root: Path | None = None, qc_only: bool = False) -> dict:
     """Reverify the ignored ledger asset and retain only an ignored local result."""
-    root = Path(root).resolve()
+    root = local_data_root(root)
     record, raw_path, receipt = acquire_source(SOURCE_ID, root=root)
     if receipt["validation_status"] != "hash-verified":
         raise ERTError("Slagdump acquisition receipt is not hash-verified")
@@ -553,9 +578,10 @@ def run_source(*, root: Path = ROOT, qc_only: bool = False) -> dict:
 def main(argv=None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--qc-only", action="store_true", help="Validate source geometry without an inverse")
+    parser.add_argument("--data-root", type=Path, help="External working-data root; otherwise GEOPHYSICS_LOCAL_DATA_ROOT")
     args = parser.parse_args(argv)
     try:
-        result = run_source(qc_only=args.qc_only)
+        result = run_source(root=args.data_root, qc_only=args.qc_only)
     except (SourceError, ERTError, OSError) as error:
         print(f"M07 Slagdump failed: {error}", file=sys.stderr)
         return 2

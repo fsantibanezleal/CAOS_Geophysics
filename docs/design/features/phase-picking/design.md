@@ -1,10 +1,10 @@
 # M13 real-waveform implementation design
 
-Status: executable data boundary under the approved product SDD. It is not a trained or released M13 method.
+Status: the STEAD model is trained on a source-bound train/development split, scored once on the locked real-waveform test set, and parity-checked in the browser on the preselected held-out display set. Transfer beyond STEAD and product release acceptance remain unresolved.
 
 ## Source and format
 
-The metadata source is the SeisBench STEAD mirror's 402,560,190-byte `metadata.csv`, already hash-verified in the metadata profile. The companion `waveforms.hdf5` is a separate 91,127,786,704-byte source and is not trusted until its download completes and a full SHA-256 receipt is recorded. SeisBench's documented waveform format maps `trace_name` to `data/[block]` and an explicit slice; the STEAD mirror uses bucketed `NCW` storage. The reader accepts only the observed bounded bucket-slice grammar, verifies the HDF5 format declaration (`CW`/`ZNE`/100 Hz/counts), decodes one 3-by-6000 trace and converts it to explicit `[sample,E,N,Z]` order. Unsupported layouts fail rather than guessing. The data are instrument counts without response restitution, not velocity in m/s.
+The metadata source is the SeisBench STEAD mirror's 402,560,190-byte `metadata.csv`, already hash-verified in the metadata profile. The companion `waveforms.hdf5` is a separate 91,127,786,704-byte source; its acquired bytes have a complete local SHA256 receipt and an independent format check. SeisBench's documented waveform format maps each `trace_name` to a bucketed waveform dataset selected by its block label and an explicit slice; the STEAD mirror uses bucketed `NCW` storage. The reader accepts only the observed bounded bucket-slice grammar, verifies the HDF5 format declaration (`CW`/`ZNE`/100 Hz/counts), decodes one 3-by-6000 trace and converts it to explicit `[sample,E,N,Z]` order. Unsupported layouts fail rather than guessing. The data are instrument counts without response restitution, not velocity in m/s.
 
 ## Partitions and selection
 

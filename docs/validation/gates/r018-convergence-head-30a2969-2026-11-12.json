@@ -1,0 +1,22 @@
+{
+  "schema": "geophysics.gate-receipt/v1",
+  "requirement": "R-018",
+  "gate": "scripts/check_sdd_convergence.py::main",
+  "gate_sha256": "096c5cbfcfb6cb8a1518b6fb1f513130af44648dd48cf9983e583294128d12e3",
+  "verdict": "pass",
+  "source_revision": "30a29693658efa8c397697ccc566c8cfe5bcec62",
+  "command": [
+    ".venv-pipeline/Scripts/python.exe",
+    "-B",
+    "scripts/check_sdd_convergence.py",
+    "--root",
+    "."
+  ],
+  "measured_at": "2026-11-12T12:12:23Z",
+  "outputs": [
+    {
+      "path": "docs/validation/r018-convergence-current-2026-11-12.txt",
+      "sha256": "c116a4d9ec7301d0b101294f5aaac885b506bf39fb0e070d13e65616e441d127"
+    }
+  ]
+}

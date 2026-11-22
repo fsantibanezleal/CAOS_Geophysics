@@ -1,0 +1,18 @@
+{
+  "kind": "manuscript",
+  "title_support": [
+    "tab:primary",
+    "tab:replay-sensitivity",
+    "fig:primary-ratios",
+    "fig:replay-sensitivity",
+    "tab:ablation",
+    "fig:ablation",
+    "fig:architecture",
+    "fig:features",
+    "fig:kernel-spectrum",
+    "tab:kernel-diagnostics"
+  ],
+  "claims": {
+    "BS-1": "sec:method"
+  }
+}

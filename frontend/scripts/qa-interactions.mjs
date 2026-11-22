@@ -63,8 +63,13 @@ async function architecture(page, language) {
 
 const desktop = await openPage(1600, 900);
 for (const route of ['', 'introduction', 'methodology', 'implementation', 'experiments', 'benchmark']) {
-  await desktop.page.goto(`${base}/${route}`, { waitUntil: 'networkidle' });
+  await desktop.page.goto(`${base}/${route}`, { waitUntil: 'domcontentloaded' });
   await desktop.page.locator('main h1').first().waitFor();
+  if (route === '') {
+    await desktop.page.locator('.earth-scene canvas').waitFor();
+    await capture(desktop.page, 'desktop-workbench');
+    await architecture(desktop.page, 'en');
+  }
   await tabs(desktop.page, route || 'app');
   if (route === 'experiments') {
     await desktop.page.getByRole('tab', { name: 'MT forward and EDI evidence', exact: true }).click();
@@ -78,28 +83,36 @@ for (const route of ['', 'introduction', 'methodology', 'implementation', 'exper
       if (await measured.getByText('Selected final model').count()) failures.push('Measured EDI incorrectly shows inverse model');
       await measured.scrollIntoViewIfNeeded();
       await capture(desktop.page, 'desktop-measured-edi');
-      await measured.locator('.science-plot').first().scrollIntoViewIfNeeded();
+      await measured.locator('.science-plot-shell').first().scrollIntoViewIfNeeded();
       await capture(desktop.page, 'desktop-measured-edi-plots');
     } else console.log('MEASURED_EDI', 'canonical field screen not in this checkout');
     await capture(desktop.page, 'desktop-edi');
-    await desktop.page.locator('.science-plot').first().scrollIntoViewIfNeeded();
+    await desktop.page.locator('.science-plot-shell').first().scrollIntoViewIfNeeded();
     await capture(desktop.page, 'desktop-edi-plots');
   }
 }
-await desktop.page.goto(base, { waitUntil: 'networkidle' });
-await capture(desktop.page, 'desktop-workbench');
-await architecture(desktop.page, 'en');
 await desktop.context.close();
 
 const mobile = await openPage(390, 844);
-await mobile.page.goto(base, { waitUntil: 'networkidle' });
+await mobile.page.goto(base, { waitUntil: 'domcontentloaded' });
+await mobile.page.locator('.earth-scene canvas').waitFor();
 await mobile.page.getByRole('button', { name: 'Switch language' }).click();
 await mobile.page.getByRole('button', { name: 'Cambiar claro / oscuro' }).click();
 await capture(mobile.page, 'mobile-es-dark-workbench');
 await mobile.page.getByRole('button', { name: /Controles de experimento y método/ }).click();
 const expanded = await mobile.page.evaluate(() => {
   const rail = document.querySelector('.instrument-sidebar');
-  return { viewport: [innerWidth, innerHeight], document: [document.documentElement.scrollWidth, document.documentElement.scrollHeight], rail: [rail.clientHeight, rail.scrollHeight] };
+  const rect = element => {
+    const box = element.getBoundingClientRect();
+    return { tag: element.tagName, className: String(element.className ?? ''), top: Math.round(box.top), bottom: Math.round(box.bottom), height: Math.round(box.height), position: getComputedStyle(element).position };
+  };
+  const layout = ['.app-shell', '.page', '.page-body', '.caos-wb', '.workbench', '.instrument-sidebar', '.instrument-main', 'header', 'footer']
+    .flatMap(selector => [...document.querySelectorAll(selector)].map(rect));
+  const overflow = [...document.querySelectorAll('body *')]
+    .map(element => ({ element, box: element.getBoundingClientRect() }))
+    .filter(({ element, box }) => getComputedStyle(element).position !== 'fixed' && box.bottom > innerHeight + 0.5)
+    .sort((a, b) => b.box.bottom - a.box.bottom).slice(0, 8).map(({ element }) => rect(element));
+  return { viewport: [innerWidth, innerHeight], document: [document.documentElement.scrollWidth, document.documentElement.scrollHeight], rail: [rail.clientHeight, rail.scrollHeight], layout, overflow };
 });
 if (expanded.document[0] !== 390 || expanded.document[1] !== 844) failures.push(`Mobile expanded document overflow ${expanded.document}`);
 if (expanded.rail[1] > expanded.rail[0] + 1) failures.push(`Mobile expanded rail scroll ${expanded.rail}`);

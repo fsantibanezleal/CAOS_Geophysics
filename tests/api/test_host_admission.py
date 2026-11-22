@@ -25,6 +25,9 @@ from tests.api.test_online_mt import NATIVE, ROOT, complete, submit, upload_data
 
 
 HOST = os.environ.get("GEOPHYSICS_RUN_HOST_ADMISSION") == "1"
+MIB = 1024 ** 2
+API_MEMORY_RESERVATION_BYTES = 512 * MIB
+BOOTSTRAP_CONTROLLER_MEMORY_RESERVATION_BYTES = 1024 * MIB
 
 
 def rank95(values):
@@ -40,6 +43,51 @@ def checked_host():
 def receipt(path, value):
     with path.open("xb") as output:
         output.write(canonical_bytes(value))
+
+
+def assert_reserved_host_headroom(*, minimum_available_memory_bytes: int,
+                                  minimum_free_disk_bytes: int,
+                                  worker_memory_bytes: int,
+                                  api_memory_bytes: int,
+                                  controller_memory_bytes: int,
+                                  job_scratch_bytes: int) -> None:
+    """Compare observed headroom with the configured service/job envelope."""
+    required_memory = worker_memory_bytes + api_memory_bytes + controller_memory_bytes
+    if minimum_available_memory_bytes < required_memory:
+        raise AssertionError(
+            "measured available memory is below the explicit worker/API/controller budget"
+        )
+    if minimum_free_disk_bytes < job_scratch_bytes:
+        raise AssertionError("measured free disk is below one configured job scratch budget")
+
+
+def test_reserved_host_headroom_uses_explicit_budgets():
+    assert_reserved_host_headroom(
+        minimum_available_memory_bytes=4 * 1024 ** 3,
+        minimum_free_disk_bytes=1024 ** 3,
+        worker_memory_bytes=2 * 1024 ** 3,
+        api_memory_bytes=API_MEMORY_RESERVATION_BYTES,
+        controller_memory_bytes=BOOTSTRAP_CONTROLLER_MEMORY_RESERVATION_BYTES,
+        job_scratch_bytes=1024 ** 3,
+    )
+    with pytest.raises(AssertionError, match="explicit worker/API/controller"):
+        assert_reserved_host_headroom(
+            minimum_available_memory_bytes=2 * 1024 ** 3,
+            minimum_free_disk_bytes=1024 ** 3,
+            worker_memory_bytes=2 * 1024 ** 3,
+            api_memory_bytes=API_MEMORY_RESERVATION_BYTES,
+            controller_memory_bytes=BOOTSTRAP_CONTROLLER_MEMORY_RESERVATION_BYTES,
+            job_scratch_bytes=1024 ** 3,
+        )
+    with pytest.raises(AssertionError, match="one configured job scratch"):
+        assert_reserved_host_headroom(
+            minimum_available_memory_bytes=4 * 1024 ** 3,
+            minimum_free_disk_bytes=1024 ** 3 - 1,
+            worker_memory_bytes=2 * 1024 ** 3,
+            api_memory_bytes=API_MEMORY_RESERVATION_BYTES,
+            controller_memory_bytes=BOOTSTRAP_CONTROLLER_MEMORY_RESERVATION_BYTES,
+            job_scratch_bytes=1024 ** 3,
+        )
 
 
 @pytest.mark.skipif(not HOST, reason="explicit actual-host gate only")
@@ -137,6 +185,16 @@ def test_nominal_distribution_and_concurrent_reads(make_harness, tmp_path):
         "sampler_interval_seconds": .05, "observed_parent_plus_child_peak_rss_bytes": max(tree_rss),
         "minimum_available_host_memory_bytes": min(available), "host_memory_bytes": memory.total,
         "minimum_free_disk_bytes": min(free), "host_disk_bytes": disk.total,
+        "capacity_reservations": {
+            "worker_memory_bytes": max(item["limits"]["memory_limit_bytes"] for item in summary.values()),
+            "api_memory_bytes": API_MEMORY_RESERVATION_BYTES,
+            "bootstrap_controller_memory_bytes": BOOTSTRAP_CONTROLLER_MEMORY_RESERVATION_BYTES,
+            "one_job_scratch_bytes": max(item["limits"]["scratch_limit_bytes"] for item in summary.values()),
+            "candidate_release_bytes_included": False,
+            "retained_release_sizes_included": False,
+            "existing_project_bytes_included": False,
+            "pre_cutover_capacity_gate": "verify_single_vps_release.validate_capacity",
+        },
         "application_read_samples": len(reads), "application_read_p95_ms": rank95(reads),
         "application_read_max_ms": max(reads),
         "read_scope": "Authenticated TestClient while real worker child runs; not nginx/TLS/network latency",
@@ -150,8 +208,14 @@ def test_nominal_distribution_and_concurrent_reads(make_harness, tmp_path):
         assert measured["p95_wall_ms"] < .7 * limits["wall_limit_seconds"] * 1000
         assert measured["p95_rss_bytes"] < .7 * limits["memory_limit_bytes"]
         assert measured["p95_scratch_bytes"] < .7 * limits["scratch_limit_bytes"]
-    assert min(available) >= .3 * memory.total
-    assert min(free) >= .3 * disk.total
+    assert_reserved_host_headroom(
+        minimum_available_memory_bytes=min(available),
+        minimum_free_disk_bytes=min(free),
+        worker_memory_bytes=max(item["limits"]["memory_limit_bytes"] for item in summary.values()),
+        api_memory_bytes=API_MEMORY_RESERVATION_BYTES,
+        controller_memory_bytes=BOOTSTRAP_CONTROLLER_MEMORY_RESERVATION_BYTES,
+        job_scratch_bytes=max(item["limits"]["scratch_limit_bytes"] for item in summary.values()),
+    )
     assert max(tree_rss) < .7 * 2 * 1024**3
     assert rank95(reads) < 1000, "Application read p95 exceeds 1 s harness threshold"
 
@@ -217,5 +281,7 @@ def test_real_parent_crash_and_recovery(make_harness, tmp_path):
 def test_host_guide_contract():
     guide = (ROOT / "docs/guides/12_actual_host_admission.md").read_text(encoding="utf-8")
     for term in ("DynamicUser", "StateDirectory", "twenty", "TestClient", "SIGKILL",
-                 "operator", "Pages", "70%", "30%", "RLIMIT_AS"):
+                 "operator", "Pages", "70%", "two rollback releases", "RLIMIT_AS",
+                 "M02 uploaded ordinary-L2 child lane", "3.12.16",
+                 "server_gravity_l2_admission.sh", "does not establish recovery of field geology"):
         assert term in guide

@@ -1,0 +1,37 @@
+{
+  "schema": "geophysics.m13-browser-current-e2e/v1",
+  "requirement": "R-019",
+  "measured_at": "2026-10-30T18:26:13.858Z",
+  "duration_ms": 64085.827999999994,
+  "source_revision": "221d031ca366410ca36066da37d302b9832008b1",
+  "working_tree_dirty": true,
+  "working_tree_changed_path_count": 94,
+  "command": [
+    "npm run build",
+    "npx playwright test -c playwright.phase-picker.config.ts"
+  ],
+  "result": {
+    "expected": 1,
+    "passed": 1,
+    "failed": 0,
+    "skipped": 0,
+    "flaky": 0
+  },
+  "coverage": [
+    "loads hash-verified reviewed STEAD assets",
+    "executes one QC-valid held-out trace in browser",
+    "retains refusal for QC-rejected trace",
+    "exports finite normalized N/P/S probabilities",
+    "confirms no API requests"
+  ],
+  "test_file_sha256": "b64fd96474f1fdaca866d300826bf9be740acf7c2d41e54f5232a444fae69be8",
+  "playwright_config_sha256": "24320f8ba6a8a208e465c6bc68059c5f333a0fbdb82d32f33a8fad6a360910b9",
+  "manifest_sha256": "3e8fac54427eeb5525c70317c508d1f55188deac3a5964ad78931561fe3c32f0",
+  "model_sha256": "4e5962ed0a9037e545991c218ae770ae7aff2c01f1e6a919c338705780ce5f4c",
+  "built_index_sha256": "fb2e2c66601e11402001fbae0c0dce332761719db82f43511e9cd7cc144b49c8",
+  "playwright_report_sha256": "e9228856a81902d8b6a0e9e7c552a33df6623aeea6a6675618f142ea32a45d5c",
+  "limitations": [
+    "One current end-to-end test; does not provide independent PyTorch-oracle parity.",
+    "Does not establish scientific accuracy, full app acceptance, VPS admission, deployment, or owner acceptance."
+  ]
+}

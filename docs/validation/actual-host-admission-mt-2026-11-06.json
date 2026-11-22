@@ -1,0 +1,119 @@
+{
+  "schema": "geophysics.actual-host-admission-summary/v1",
+  "run_id": "mt-20261106-5a72fc3",
+  "source_commit": "5a72fc336258f07bc84718b77791dcb83ea0fdfb",
+  "source_archive_bytes": 876482560,
+  "source_archive_sha256": "3e6487838bc5061696920a1734caea5e68d796b79a57a3bf5089f7033023eb5f",
+  "dependency_inventory_sha256": "2df59416a5f25bb8697b61dc16eb52d295d6e64c93c3707ebc582f9f3100f4cf",
+  "private_raw_archive_sha256": "1737e6c4ae0dcec08f72ebda5ad60d2ac2a4f8517c42c36d095ab5f3ba699d43",
+  "host": {
+    "os": "Ubuntu 24.04",
+    "kernel": "Linux 6.8.0-117-generic",
+    "python": "3.12.3",
+    "systemd": "255",
+    "torch_installed": false,
+    "pip_check": "passed"
+  },
+  "service": {
+    "unit": "geophysics-admission-mt-20261106-5a72fc3",
+    "invocation_id": "fd2e7a0a82ec4835931d8b351d0e577e",
+    "dynamic_user": true,
+    "private_network": true,
+    "protect_system": "strict",
+    "protect_home": true,
+    "private_tmp": true,
+    "private_devices": true,
+    "no_new_privileges": true,
+    "state_directory_mode": "0700",
+    "memory_high_bytes": 1610612736,
+    "memory_max_bytes": 2147483648,
+    "memory_swap_max_bytes": 0,
+    "cpu_quota": "200%",
+    "tasks_max": 96,
+    "runtime_max_seconds": 1800,
+    "exit_status": 0,
+    "runtime_seconds": 497.729,
+    "cpu_seconds": 822.231,
+    "cgroup_peak_memory_reported": "485.5M",
+    "cgroup_peak_swap_reported": "0B"
+  },
+  "suite": {
+    "command": "bash scripts/server_mt_admission.sh mt-20261106-5a72fc3",
+    "passed": 9,
+    "failed": 0,
+    "skipped": 0,
+    "duration_seconds": 491.37,
+    "warnings": 1
+  },
+  "nominal": {
+    "analytic_edi_source": true,
+    "scored_jobs": 40,
+    "prerequisite_m05_qc_jobs": 1,
+    "methods": {
+      "mt.edi-full-tensor-qc/v1": {
+        "count": 20,
+        "p95_wall_ms": 9876,
+        "wall_limit_seconds": 90,
+        "p95_rss_bytes": 244056064,
+        "rss_limit_bytes": 805306368,
+        "p95_scratch_bytes": 53880,
+        "scratch_limit_bytes": 8388608
+      },
+      "mt.edi-fixed-thickness-trf/v1": {
+        "count": 20,
+        "p95_wall_ms": 10099,
+        "wall_limit_seconds": 300,
+        "p95_rss_bytes": 245755904,
+        "rss_limit_bytes": 1073741824,
+        "p95_scratch_bytes": 77250,
+        "scratch_limit_bytes": 33554432
+      }
+    },
+    "application_read_samples": 5028,
+    "application_read_p95_ms": 41.01643152534962,
+    "application_read_max_ms": 231.65645450353622,
+    "minimum_available_host_memory_bytes": 4915912704,
+    "minimum_free_disk_bytes": 25645625344,
+    "observed_parent_plus_child_peak_rss_bytes": 428810240,
+    "worker_memory_reservation_bytes": 1073741824,
+    "api_memory_reservation_bytes": 536870912,
+    "controller_memory_reservation_bytes": 1073741824,
+    "one_job_scratch_reservation_bytes": 33554432
+  },
+  "controls": {
+    "upper_and_malformed_rows": 6,
+    "malformed_m05_state": "failed",
+    "malformed_m05_error": "processing_failed",
+    "over_64_frequency_rejection": 422,
+    "over_5_mib_source_rejection": 413,
+    "parent_crash_state": "worker_interrupted",
+    "crash_orphan_alive": false,
+    "operator_review_required": true,
+    "post_crash_retry_succeeded": true
+  },
+  "host_after": {
+    "active_release": "20260926235216",
+    "release_ids": [
+      "20260926200023",
+      "20260926233737",
+      "20260926235216"
+    ],
+    "nginx_active": true,
+    "api_socket_active": false,
+    "api_service_active": false,
+    "worker_active": false,
+    "filesystem_available_bytes": 25623670784,
+    "mem_available_kib": 5092680
+  },
+  "host_after_staging_cleanup": {
+    "filesystem_available_bytes": 27981316096,
+    "mem_available_kib": 5121268,
+    "temporary_source_and_venv_removed": true
+  },
+  "acceptance": {
+    "m05_m06_actual_host_admission": "pass",
+    "full_method_host_admission": "unresolved",
+    "replacement_release_accepted": false,
+    "public_activation": false
+  }
+}

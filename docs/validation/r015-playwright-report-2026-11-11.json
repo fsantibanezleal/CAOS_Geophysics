@@ -1,0 +1,637 @@
+{
+  "config": {
+    "argv": [
+      "C:\\nvm4w\\nodejs\\node.exe",
+      "D:\\_Repos\\_Web_Projects\\CAOS_Geophysics\\frontend\\node_modules\\@playwright\\test\\cli.js",
+      "test",
+      "-c",
+      "playwright.visual-matrix.config.ts"
+    ],
+    "configFile": "D:\\_Repos\\_Web_Projects\\CAOS_Geophysics\\frontend\\playwright.visual-matrix.config.ts",
+    "rootDir": "D:/_Repos/_Web_Projects/CAOS_Geophysics/frontend/e2e",
+    "failOnFlakyTests": false,
+    "forbidOnly": false,
+    "fullyParallel": true,
+    "globalSetup": null,
+    "globalTeardown": null,
+    "globalTimeout": 0,
+    "grep": {},
+    "grepInvert": null,
+    "maxFailures": 0,
+    "metadata": {
+      "actualWorkers": 4
+    },
+    "preserveOutput": "always",
+    "projects": [
+      {
+        "outputDir": "E:/_Datos/CAOS_Geophysics/validation/r015-visual-matrix-2026-11-11/playwright-results",
+        "repeatEach": 1,
+        "retries": 0,
+        "metadata": {
+          "actualWorkers": 4
+        },
+        "id": "",
+        "name": "",
+        "testDir": "D:/_Repos/_Web_Projects/CAOS_Geophysics/frontend/e2e",
+        "testIgnore": [],
+        "testMatch": [
+          "visual-matrix.spec.ts"
+        ],
+        "timeout": 120000
+      }
+    ],
+    "quiet": false,
+    "reporter": [
+      [
+        "list",
+        null
+      ],
+      [
+        "json",
+        {
+          "outputFile": "E:\\_Datos\\CAOS_Geophysics\\validation\\r015-visual-matrix-2026-11-11\\playwright-report.json"
+        }
+      ]
+    ],
+    "reportSlowTests": {
+      "max": 5,
+      "threshold": 300000
+    },
+    "shard": null,
+    "tags": [],
+    "updateSnapshots": "missing",
+    "updateSourceMethod": "patch",
+    "version": "1.63.0",
+    "workers": 4,
+    "webServer": {
+      "command": "node node_modules/vite/bin/vite.js preview --host 127.0.0.1 --port 8897 --strictPort",
+      "cwd": "D:\\_Repos\\_Web_Projects\\CAOS_Geophysics\\frontend",
+      "url": "http://127.0.0.1:8897/",
+      "reuseExistingServer": false,
+      "timeout": 60000
+    }
+  },
+  "suites": [
+    {
+      "title": "visual-matrix.spec.ts",
+      "file": "visual-matrix.spec.ts",
+      "column": 0,
+      "line": 0,
+      "specs": [
+        {
+          "title": "fit_and_pointer_navigation en light desktop no-preference",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 37254,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-11T03:08:40.202Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "df2fb843a1c481a1dd40-1eb601b2785a69d8f28e",
+          "file": "visual-matrix.spec.ts",
+          "line": 174,
+          "column": 9
+        },
+        {
+          "title": "fit_and_pointer_navigation en light desktop reduce",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 35051,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-11T03:08:40.203Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "df2fb843a1c481a1dd40-d58fb81ace18eab407d0",
+          "file": "visual-matrix.spec.ts",
+          "line": 174,
+          "column": 9
+        },
+        {
+          "title": "fit_and_pointer_navigation en light phone no-preference",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 2,
+                  "status": "passed",
+                  "duration": 35404,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-11T03:08:40.187Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "df2fb843a1c481a1dd40-61123e8bc6618b452f66",
+          "file": "visual-matrix.spec.ts",
+          "line": 174,
+          "column": 9
+        },
+        {
+          "title": "fit_and_pointer_navigation en light phone reduce",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 3,
+                  "status": "passed",
+                  "duration": 34960,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-11T03:08:40.141Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "df2fb843a1c481a1dd40-68b6e68c364b13cd4bad",
+          "file": "visual-matrix.spec.ts",
+          "line": 174,
+          "column": 9
+        },
+        {
+          "title": "fit_and_pointer_navigation en dark desktop no-preference",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 16838,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-11T03:09:16.092Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "df2fb843a1c481a1dd40-1e7b3786f523a113714e",
+          "file": "visual-matrix.spec.ts",
+          "line": 174,
+          "column": 9
+        },
+        {
+          "title": "fit_and_pointer_navigation en dark desktop reduce",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 3,
+                  "status": "passed",
+                  "duration": 59941,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-11T03:09:16.152Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "df2fb843a1c481a1dd40-3c32ad3563685f438362",
+          "file": "visual-matrix.spec.ts",
+          "line": 174,
+          "column": 9
+        },
+        {
+          "title": "fit_and_pointer_navigation en dark phone no-preference",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 2,
+                  "status": "passed",
+                  "duration": 31067,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-11T03:09:16.619Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "df2fb843a1c481a1dd40-7346ea3ee4b93fc523f0",
+          "file": "visual-matrix.spec.ts",
+          "line": 174,
+          "column": 9
+        },
+        {
+          "title": "fit_and_pointer_navigation en dark phone reduce",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 27269,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-11T03:09:18.497Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "df2fb843a1c481a1dd40-23f09b6167187fcf02ae",
+          "file": "visual-matrix.spec.ts",
+          "line": 174,
+          "column": 9
+        },
+        {
+          "title": "fit_and_pointer_navigation es light desktop no-preference",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 25053,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-11T03:09:33.006Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "df2fb843a1c481a1dd40-5b32ed56f8a609b30a8a",
+          "file": "visual-matrix.spec.ts",
+          "line": 174,
+          "column": 9
+        },
+        {
+          "title": "fit_and_pointer_navigation es light desktop reduce",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 22555,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-11T03:09:45.908Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "df2fb843a1c481a1dd40-c5c052d574449e5a9056",
+          "file": "visual-matrix.spec.ts",
+          "line": 174,
+          "column": 9
+        },
+        {
+          "title": "fit_and_pointer_navigation es light phone no-preference",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 2,
+                  "status": "passed",
+                  "duration": 25459,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-11T03:09:47.858Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "df2fb843a1c481a1dd40-849f2e9c9a3179e035af",
+          "file": "visual-matrix.spec.ts",
+          "line": 174,
+          "column": 9
+        },
+        {
+          "title": "fit_and_pointer_navigation es light phone reduce",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 23271,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-11T03:09:58.176Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "df2fb843a1c481a1dd40-b15b8260ac6f51115145",
+          "file": "visual-matrix.spec.ts",
+          "line": 174,
+          "column": 9
+        },
+        {
+          "title": "fit_and_pointer_navigation es dark desktop no-preference",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 0,
+                  "parallelIndex": 0,
+                  "status": "passed",
+                  "duration": 26302,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-11T03:10:08.535Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "df2fb843a1c481a1dd40-582b0a2fba4e891ab00d",
+          "file": "visual-matrix.spec.ts",
+          "line": 174,
+          "column": 9
+        },
+        {
+          "title": "fit_and_pointer_navigation es dark desktop reduce",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 2,
+                  "parallelIndex": 2,
+                  "status": "passed",
+                  "duration": 21638,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-11T03:10:13.413Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "df2fb843a1c481a1dd40-18fa5fd6de49ab840791",
+          "file": "visual-matrix.spec.ts",
+          "line": 174,
+          "column": 9
+        },
+        {
+          "title": "fit_and_pointer_navigation es dark phone no-preference",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 3,
+                  "parallelIndex": 3,
+                  "status": "passed",
+                  "duration": 20390,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-11T03:10:16.278Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "df2fb843a1c481a1dd40-3f530727e534cd1bedd5",
+          "file": "visual-matrix.spec.ts",
+          "line": 174,
+          "column": 9
+        },
+        {
+          "title": "fit_and_pointer_navigation es dark phone reduce",
+          "ok": true,
+          "tags": [],
+          "tests": [
+            {
+              "timeout": 120000,
+              "annotations": [],
+              "expectedStatus": "passed",
+              "projectId": "",
+              "projectName": "",
+              "results": [
+                {
+                  "workerIndex": 1,
+                  "parallelIndex": 1,
+                  "status": "passed",
+                  "duration": 16186,
+                  "errors": [],
+                  "stdout": [],
+                  "stderr": [],
+                  "retry": 0,
+                  "startTime": "2026-11-11T03:10:21.643Z",
+                  "annotations": [],
+                  "attachments": []
+                }
+              ],
+              "status": "expected"
+            }
+          ],
+          "id": "df2fb843a1c481a1dd40-268bf7a98a3a88975631",
+          "file": "visual-matrix.spec.ts",
+          "line": 174,
+          "column": 9
+        }
+      ]
+    }
+  ],
+  "errors": [],
+  "stats": {
+    "startTime": "2026-11-11T03:08:36.961Z",
+    "duration": 123852.554,
+    "expected": 16,
+    "skipped": 0,
+    "unexpected": 0,
+    "flaky": 0
+  }
+}

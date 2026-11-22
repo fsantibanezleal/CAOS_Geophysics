@@ -1,0 +1,3268 @@
+{
+  "schema": "caos-geophysics.m12-nullspace-threshold-reconciliation/v1",
+  "source": {
+    "schema": "caos-geophysics.m12-nullspace-residual/v1.1",
+    "protocol": "m12-nullspace-residual/v1.1",
+    "receipt_sha256": "30df0c2ad495bd850dda602b1c96725be8290dd086119fb3e8e75355fe9dea22"
+  },
+  "method": {
+    "threshold_ms": 1.0649004873400532,
+    "quantile": 0.95,
+    "quantile_method": "numpy-linear",
+    "reference": "calibration learned oracle RMSE only",
+    "comparison": "strict greater-than; no cohort-specific retuning"
+  },
+  "cohorts": {
+    "calibration": {
+      "count": 160,
+      "exceedances": 8,
+      "non_exceedances": 152,
+      "exceedance_fraction": 0.05,
+      "records": [
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417001:layered:A",
+          "learned_oracle_rmse_ms": 0.9084480071394662,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417002:lens:A",
+          "learned_oracle_rmse_ms": 0.6415487608876334,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417003:dipping:A",
+          "learned_oracle_rmse_ms": 0.9572433164058848,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417004:layered:B",
+          "learned_oracle_rmse_ms": 0.6634834343006195,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417005:lens:B",
+          "learned_oracle_rmse_ms": 0.8780635611591274,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417006:dipping:B",
+          "learned_oracle_rmse_ms": 1.2110900984696762,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417007:layered:A",
+          "learned_oracle_rmse_ms": 0.9460366546187232,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417008:lens:A",
+          "learned_oracle_rmse_ms": 0.7731423707123203,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417009:dipping:A",
+          "learned_oracle_rmse_ms": 0.8298973728095732,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417010:layered:B",
+          "learned_oracle_rmse_ms": 0.8697628476506799,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417011:lens:B",
+          "learned_oracle_rmse_ms": 0.7087375999675891,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417012:dipping:B",
+          "learned_oracle_rmse_ms": 0.9635851345925232,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417013:layered:A",
+          "learned_oracle_rmse_ms": 1.0034045580732271,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417014:lens:A",
+          "learned_oracle_rmse_ms": 0.6397155793655074,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417015:dipping:A",
+          "learned_oracle_rmse_ms": 0.8354590626289358,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417016:layered:B",
+          "learned_oracle_rmse_ms": 0.9245197689121699,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417017:lens:B",
+          "learned_oracle_rmse_ms": 0.7682925206300592,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417018:dipping:B",
+          "learned_oracle_rmse_ms": 0.7644921018899288,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417019:layered:A",
+          "learned_oracle_rmse_ms": 0.6978059932257653,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417020:lens:A",
+          "learned_oracle_rmse_ms": 0.766233107323985,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417021:dipping:A",
+          "learned_oracle_rmse_ms": 1.1130413364922553,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417022:layered:B",
+          "learned_oracle_rmse_ms": 0.8153015236475365,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417023:lens:B",
+          "learned_oracle_rmse_ms": 0.8071110365563906,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417024:dipping:B",
+          "learned_oracle_rmse_ms": 0.786509172588831,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417025:layered:A",
+          "learned_oracle_rmse_ms": 0.8369847639754324,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417026:lens:A",
+          "learned_oracle_rmse_ms": 0.7579682672871495,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417027:dipping:A",
+          "learned_oracle_rmse_ms": 0.9674933017270962,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417028:layered:B",
+          "learned_oracle_rmse_ms": 0.8252709257206777,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417029:lens:B",
+          "learned_oracle_rmse_ms": 0.6840601218108087,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417030:dipping:B",
+          "learned_oracle_rmse_ms": 1.0711960637077451,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417031:layered:A",
+          "learned_oracle_rmse_ms": 0.8421616054730565,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417032:lens:A",
+          "learned_oracle_rmse_ms": 0.7422413805360263,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417033:dipping:A",
+          "learned_oracle_rmse_ms": 0.8648458828192997,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417034:layered:B",
+          "learned_oracle_rmse_ms": 0.8457340068492292,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417035:lens:B",
+          "learned_oracle_rmse_ms": 0.7340222257502611,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417036:dipping:B",
+          "learned_oracle_rmse_ms": 0.9218219752774224,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417037:layered:A",
+          "learned_oracle_rmse_ms": 0.89633844539341,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417038:lens:A",
+          "learned_oracle_rmse_ms": 0.7561774177111473,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417039:dipping:A",
+          "learned_oracle_rmse_ms": 0.8344526347528737,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417040:layered:B",
+          "learned_oracle_rmse_ms": 0.8638450984752863,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417041:lens:B",
+          "learned_oracle_rmse_ms": 0.7217398973546736,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417042:dipping:B",
+          "learned_oracle_rmse_ms": 0.8640602016212667,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417043:layered:A",
+          "learned_oracle_rmse_ms": 0.7622953740929358,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417044:lens:A",
+          "learned_oracle_rmse_ms": 0.7191066455696492,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417045:dipping:A",
+          "learned_oracle_rmse_ms": 0.9083550286937206,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417046:layered:B",
+          "learned_oracle_rmse_ms": 0.8289268405021097,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417047:lens:B",
+          "learned_oracle_rmse_ms": 0.6956559583881375,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417048:dipping:B",
+          "learned_oracle_rmse_ms": 1.1286608694992246,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417049:layered:A",
+          "learned_oracle_rmse_ms": 0.7779479464111646,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417050:lens:A",
+          "learned_oracle_rmse_ms": 0.7268072491078544,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417051:dipping:A",
+          "learned_oracle_rmse_ms": 0.871427942618463,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417052:layered:B",
+          "learned_oracle_rmse_ms": 0.8036383083031672,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417053:lens:B",
+          "learned_oracle_rmse_ms": 0.7397306932239784,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417054:dipping:B",
+          "learned_oracle_rmse_ms": 0.8422396661269479,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417055:layered:A",
+          "learned_oracle_rmse_ms": 0.8827832118291328,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417056:lens:A",
+          "learned_oracle_rmse_ms": 0.6551401083976945,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417057:dipping:A",
+          "learned_oracle_rmse_ms": 0.9014037150400259,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417058:layered:B",
+          "learned_oracle_rmse_ms": 0.8154998681949367,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417059:lens:B",
+          "learned_oracle_rmse_ms": 0.7763550364004627,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417060:dipping:B",
+          "learned_oracle_rmse_ms": 0.9066802440376243,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417061:layered:A",
+          "learned_oracle_rmse_ms": 0.8726103967344498,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417062:lens:A",
+          "learned_oracle_rmse_ms": 0.7697553767409586,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417063:dipping:A",
+          "learned_oracle_rmse_ms": 0.8637921516687668,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417064:layered:B",
+          "learned_oracle_rmse_ms": 0.7932616306027237,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417065:lens:B",
+          "learned_oracle_rmse_ms": 0.6827454786034414,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417066:dipping:B",
+          "learned_oracle_rmse_ms": 1.18986737077744,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417067:layered:A",
+          "learned_oracle_rmse_ms": 0.8143800814575778,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417068:lens:A",
+          "learned_oracle_rmse_ms": 0.7145589305233985,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417069:dipping:A",
+          "learned_oracle_rmse_ms": 0.8471817344671758,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417070:layered:B",
+          "learned_oracle_rmse_ms": 0.8992755589174279,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417071:lens:B",
+          "learned_oracle_rmse_ms": 0.7664695115102811,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417072:dipping:B",
+          "learned_oracle_rmse_ms": 0.9288164062082161,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417073:layered:A",
+          "learned_oracle_rmse_ms": 0.7938738678137173,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417074:lens:A",
+          "learned_oracle_rmse_ms": 0.6864211101542111,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417075:dipping:A",
+          "learned_oracle_rmse_ms": 0.9040283946416288,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417076:layered:B",
+          "learned_oracle_rmse_ms": 0.6750367439691973,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417077:lens:B",
+          "learned_oracle_rmse_ms": 0.7056432572293146,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417078:dipping:B",
+          "learned_oracle_rmse_ms": 0.9205591382209101,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417079:layered:A",
+          "learned_oracle_rmse_ms": 0.627906480876167,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417080:lens:A",
+          "learned_oracle_rmse_ms": 0.701877139855347,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417081:dipping:A",
+          "learned_oracle_rmse_ms": 0.9703024406850075,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417082:layered:B",
+          "learned_oracle_rmse_ms": 0.7581893371072523,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417083:lens:B",
+          "learned_oracle_rmse_ms": 0.6850422302559899,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417084:dipping:B",
+          "learned_oracle_rmse_ms": 0.84650506468899,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417085:layered:A",
+          "learned_oracle_rmse_ms": 0.7457020475006252,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417086:lens:A",
+          "learned_oracle_rmse_ms": 0.774326694735846,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417087:dipping:A",
+          "learned_oracle_rmse_ms": 0.7087607990656609,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417088:layered:B",
+          "learned_oracle_rmse_ms": 0.876290042903734,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417089:lens:B",
+          "learned_oracle_rmse_ms": 0.637060958940098,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417090:dipping:B",
+          "learned_oracle_rmse_ms": 0.9188462935920068,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417091:layered:A",
+          "learned_oracle_rmse_ms": 0.7172198889013666,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417092:lens:A",
+          "learned_oracle_rmse_ms": 0.722299390232807,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417093:dipping:A",
+          "learned_oracle_rmse_ms": 0.812626094290641,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417094:layered:B",
+          "learned_oracle_rmse_ms": 0.9146232261109587,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417095:lens:B",
+          "learned_oracle_rmse_ms": 0.7550925202838081,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417096:dipping:B",
+          "learned_oracle_rmse_ms": 1.0645691412154379,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417097:layered:A",
+          "learned_oracle_rmse_ms": 0.8039546534732753,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417098:lens:A",
+          "learned_oracle_rmse_ms": 0.6202382923991775,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417099:dipping:A",
+          "learned_oracle_rmse_ms": 0.7874579225266566,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417100:layered:B",
+          "learned_oracle_rmse_ms": 0.8898741639593423,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417101:lens:B",
+          "learned_oracle_rmse_ms": 0.7510702194819601,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417102:dipping:B",
+          "learned_oracle_rmse_ms": 0.8781495454318093,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417103:layered:A",
+          "learned_oracle_rmse_ms": 0.700424630061926,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417104:lens:A",
+          "learned_oracle_rmse_ms": 0.7128737502907709,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417105:dipping:A",
+          "learned_oracle_rmse_ms": 0.9034214258102232,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417106:layered:B",
+          "learned_oracle_rmse_ms": 0.9525010468227842,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417107:lens:B",
+          "learned_oracle_rmse_ms": 0.701106854526409,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417108:dipping:B",
+          "learned_oracle_rmse_ms": 0.9515468760626743,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417109:layered:A",
+          "learned_oracle_rmse_ms": 0.877205551167353,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417110:lens:A",
+          "learned_oracle_rmse_ms": 0.7853692224093592,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417111:dipping:A",
+          "learned_oracle_rmse_ms": 0.8713849860461109,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417112:layered:B",
+          "learned_oracle_rmse_ms": 0.8481992496499977,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417113:lens:B",
+          "learned_oracle_rmse_ms": 0.7409557621235443,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417114:dipping:B",
+          "learned_oracle_rmse_ms": 0.9123013303095217,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417115:layered:A",
+          "learned_oracle_rmse_ms": 0.7488753602623697,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417116:lens:A",
+          "learned_oracle_rmse_ms": 0.9269167397938591,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417117:dipping:A",
+          "learned_oracle_rmse_ms": 0.84206099378835,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417118:layered:B",
+          "learned_oracle_rmse_ms": 0.8032628538278679,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417119:lens:B",
+          "learned_oracle_rmse_ms": 0.8029575636204911,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417120:dipping:B",
+          "learned_oracle_rmse_ms": 1.0803869098285774,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417121:layered:A",
+          "learned_oracle_rmse_ms": 1.0524781603522217,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417122:lens:A",
+          "learned_oracle_rmse_ms": 0.6828693476568448,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417123:dipping:A",
+          "learned_oracle_rmse_ms": 1.0336107949064284,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417124:layered:B",
+          "learned_oracle_rmse_ms": 0.7044368598165233,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417125:lens:B",
+          "learned_oracle_rmse_ms": 0.7679946178465726,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417126:dipping:B",
+          "learned_oracle_rmse_ms": 1.1457775569940827,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417127:layered:A",
+          "learned_oracle_rmse_ms": 0.7389483275660965,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417128:lens:A",
+          "learned_oracle_rmse_ms": 0.8112394191958325,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417129:dipping:A",
+          "learned_oracle_rmse_ms": 0.806378075511696,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417130:layered:B",
+          "learned_oracle_rmse_ms": 1.0229917610509416,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417131:lens:B",
+          "learned_oracle_rmse_ms": 0.8988918232335387,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417132:dipping:B",
+          "learned_oracle_rmse_ms": 0.751857058899866,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417133:layered:A",
+          "learned_oracle_rmse_ms": 0.7939030165983467,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417134:lens:A",
+          "learned_oracle_rmse_ms": 0.7265788268365816,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417135:dipping:A",
+          "learned_oracle_rmse_ms": 0.6717253806587205,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417136:layered:B",
+          "learned_oracle_rmse_ms": 0.6546237055164693,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417137:lens:B",
+          "learned_oracle_rmse_ms": 0.687360495425497,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417138:dipping:B",
+          "learned_oracle_rmse_ms": 1.1535080987482524,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417139:layered:A",
+          "learned_oracle_rmse_ms": 0.913430104460175,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417140:lens:A",
+          "learned_oracle_rmse_ms": 0.7976174390381656,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417141:dipping:A",
+          "learned_oracle_rmse_ms": 1.0336677562238668,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417142:layered:B",
+          "learned_oracle_rmse_ms": 0.7246543074266532,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417143:lens:B",
+          "learned_oracle_rmse_ms": 0.6839503056613656,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417144:dipping:B",
+          "learned_oracle_rmse_ms": 0.7350112475087858,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417145:layered:A",
+          "learned_oracle_rmse_ms": 0.7894143922838255,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417146:lens:A",
+          "learned_oracle_rmse_ms": 0.664840442640305,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417147:dipping:A",
+          "learned_oracle_rmse_ms": 0.9992300127698442,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417148:layered:B",
+          "learned_oracle_rmse_ms": 0.83138626230032,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417149:lens:B",
+          "learned_oracle_rmse_ms": 0.7420207964042848,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417150:dipping:B",
+          "learned_oracle_rmse_ms": 0.99267941019968,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417151:layered:A",
+          "learned_oracle_rmse_ms": 0.7826296740882168,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417152:lens:A",
+          "learned_oracle_rmse_ms": 0.6881823841440368,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417153:dipping:A",
+          "learned_oracle_rmse_ms": 0.8775054719437337,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417154:layered:B",
+          "learned_oracle_rmse_ms": 0.8021236264359398,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417155:lens:B",
+          "learned_oracle_rmse_ms": 0.6648398945777717,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417156:dipping:B",
+          "learned_oracle_rmse_ms": 0.893969964395597,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417157:layered:A",
+          "learned_oracle_rmse_ms": 0.8357700059290014,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417158:lens:A",
+          "learned_oracle_rmse_ms": 0.692587329963226,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417159:dipping:A",
+          "learned_oracle_rmse_ms": 0.8934931977352931,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:calibration:417160:layered:B",
+          "learned_oracle_rmse_ms": 0.9023484646285257,
+          "forward_threshold_exceeded": false
+        }
+      ]
+    },
+    "id_test": {
+      "count": 160,
+      "exceedances": 7,
+      "non_exceedances": 153,
+      "exceedance_fraction": 0.04375,
+      "records": [
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427001:layered:A",
+          "learned_oracle_rmse_ms": 0.6417232201926794,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427002:lens:A",
+          "learned_oracle_rmse_ms": 0.6872123270751718,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427003:dipping:A",
+          "learned_oracle_rmse_ms": 1.056318033506446,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427004:layered:B",
+          "learned_oracle_rmse_ms": 0.8235731322189868,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427005:lens:B",
+          "learned_oracle_rmse_ms": 0.7211900739009819,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427006:dipping:B",
+          "learned_oracle_rmse_ms": 0.8787266999161112,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427007:layered:A",
+          "learned_oracle_rmse_ms": 0.7069252884739163,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427008:lens:A",
+          "learned_oracle_rmse_ms": 0.7486092002040995,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427009:dipping:A",
+          "learned_oracle_rmse_ms": 0.9345496119246081,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427010:layered:B",
+          "learned_oracle_rmse_ms": 0.7240833067134186,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427011:lens:B",
+          "learned_oracle_rmse_ms": 0.7097689283753423,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427012:dipping:B",
+          "learned_oracle_rmse_ms": 0.8485386084298736,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427013:layered:A",
+          "learned_oracle_rmse_ms": 0.7704883980930152,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427014:lens:A",
+          "learned_oracle_rmse_ms": 0.6368988707278024,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427015:dipping:A",
+          "learned_oracle_rmse_ms": 0.7315255493233677,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427016:layered:B",
+          "learned_oracle_rmse_ms": 0.8767776530705584,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427017:lens:B",
+          "learned_oracle_rmse_ms": 0.7055085405860828,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427018:dipping:B",
+          "learned_oracle_rmse_ms": 0.77547378492244,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427019:layered:A",
+          "learned_oracle_rmse_ms": 0.8263214059560196,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427020:lens:A",
+          "learned_oracle_rmse_ms": 0.6948934628865083,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427021:dipping:A",
+          "learned_oracle_rmse_ms": 0.8164695238292299,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427022:layered:B",
+          "learned_oracle_rmse_ms": 0.7742499498339086,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427023:lens:B",
+          "learned_oracle_rmse_ms": 0.6490790661423075,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427024:dipping:B",
+          "learned_oracle_rmse_ms": 0.9697830796164276,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427025:layered:A",
+          "learned_oracle_rmse_ms": 0.6633297286159243,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427026:lens:A",
+          "learned_oracle_rmse_ms": 0.6914490638249978,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427027:dipping:A",
+          "learned_oracle_rmse_ms": 0.9195980975970709,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427028:layered:B",
+          "learned_oracle_rmse_ms": 0.9894946789097759,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427029:lens:B",
+          "learned_oracle_rmse_ms": 0.7050936753477342,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427030:dipping:B",
+          "learned_oracle_rmse_ms": 0.84582487750089,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427031:layered:A",
+          "learned_oracle_rmse_ms": 0.8302937392760447,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427032:lens:A",
+          "learned_oracle_rmse_ms": 0.5929156471130553,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427033:dipping:A",
+          "learned_oracle_rmse_ms": 1.1677656036960646,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427034:layered:B",
+          "learned_oracle_rmse_ms": 0.8845767064348036,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427035:lens:B",
+          "learned_oracle_rmse_ms": 0.8082162737145726,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427036:dipping:B",
+          "learned_oracle_rmse_ms": 0.9475270639495926,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427037:layered:A",
+          "learned_oracle_rmse_ms": 0.818927445064874,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427038:lens:A",
+          "learned_oracle_rmse_ms": 0.6362699896638829,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427039:dipping:A",
+          "learned_oracle_rmse_ms": 0.8582914727871226,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427040:layered:B",
+          "learned_oracle_rmse_ms": 1.0016809164576463,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427041:lens:B",
+          "learned_oracle_rmse_ms": 0.7739988770675712,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427042:dipping:B",
+          "learned_oracle_rmse_ms": 0.887366569074434,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427043:layered:A",
+          "learned_oracle_rmse_ms": 0.70174181915837,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427044:lens:A",
+          "learned_oracle_rmse_ms": 0.5328271898477788,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427045:dipping:A",
+          "learned_oracle_rmse_ms": 1.1133197155380246,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427046:layered:B",
+          "learned_oracle_rmse_ms": 1.0142445425119904,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427047:lens:B",
+          "learned_oracle_rmse_ms": 0.6534474800286934,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427048:dipping:B",
+          "learned_oracle_rmse_ms": 0.9290272151600936,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427049:layered:A",
+          "learned_oracle_rmse_ms": 0.7512613488415308,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427050:lens:A",
+          "learned_oracle_rmse_ms": 0.7559827076472416,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427051:dipping:A",
+          "learned_oracle_rmse_ms": 0.790136458277513,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427052:layered:B",
+          "learned_oracle_rmse_ms": 0.6781809288396244,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427053:lens:B",
+          "learned_oracle_rmse_ms": 0.8595723552221374,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427054:dipping:B",
+          "learned_oracle_rmse_ms": 0.9206989207793715,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427055:layered:A",
+          "learned_oracle_rmse_ms": 0.9643332743996267,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427056:lens:A",
+          "learned_oracle_rmse_ms": 0.5609348536589488,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427057:dipping:A",
+          "learned_oracle_rmse_ms": 0.9096784683361554,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427058:layered:B",
+          "learned_oracle_rmse_ms": 0.7558188626809771,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427059:lens:B",
+          "learned_oracle_rmse_ms": 0.6881952321480158,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427060:dipping:B",
+          "learned_oracle_rmse_ms": 1.0107252908633027,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427061:layered:A",
+          "learned_oracle_rmse_ms": 0.835661920056644,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427062:lens:A",
+          "learned_oracle_rmse_ms": 0.7379485574867083,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427063:dipping:A",
+          "learned_oracle_rmse_ms": 0.7664970404446408,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427064:layered:B",
+          "learned_oracle_rmse_ms": 0.8770489914427406,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427065:lens:B",
+          "learned_oracle_rmse_ms": 0.7118195790450461,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427066:dipping:B",
+          "learned_oracle_rmse_ms": 0.8095753602618652,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427067:layered:A",
+          "learned_oracle_rmse_ms": 0.7645142927832542,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427068:lens:A",
+          "learned_oracle_rmse_ms": 0.694860629178821,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427069:dipping:A",
+          "learned_oracle_rmse_ms": 0.8375091526424316,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427070:layered:B",
+          "learned_oracle_rmse_ms": 0.6859847497815457,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427071:lens:B",
+          "learned_oracle_rmse_ms": 0.7159763066382148,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427072:dipping:B",
+          "learned_oracle_rmse_ms": 0.8331250599805273,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427073:layered:A",
+          "learned_oracle_rmse_ms": 0.8248867781576443,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427074:lens:A",
+          "learned_oracle_rmse_ms": 0.8073327432600673,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427075:dipping:A",
+          "learned_oracle_rmse_ms": 0.8117981939689253,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427076:layered:B",
+          "learned_oracle_rmse_ms": 0.9168475243227276,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427077:lens:B",
+          "learned_oracle_rmse_ms": 0.7546827664049937,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427078:dipping:B",
+          "learned_oracle_rmse_ms": 0.7479706145436548,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427079:layered:A",
+          "learned_oracle_rmse_ms": 0.970571747522701,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427080:lens:A",
+          "learned_oracle_rmse_ms": 0.676337037659436,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427081:dipping:A",
+          "learned_oracle_rmse_ms": 0.8473582254101227,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427082:layered:B",
+          "learned_oracle_rmse_ms": 0.7556709738134425,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427083:lens:B",
+          "learned_oracle_rmse_ms": 0.7604148892161331,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427084:dipping:B",
+          "learned_oracle_rmse_ms": 1.044071843332261,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427085:layered:A",
+          "learned_oracle_rmse_ms": 0.8033599240402686,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427086:lens:A",
+          "learned_oracle_rmse_ms": 0.6915075499874358,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427087:dipping:A",
+          "learned_oracle_rmse_ms": 0.8617303191655732,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427088:layered:B",
+          "learned_oracle_rmse_ms": 0.6705282995264954,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427089:lens:B",
+          "learned_oracle_rmse_ms": 0.8417147436696494,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427090:dipping:B",
+          "learned_oracle_rmse_ms": 1.1748903225206129,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427091:layered:A",
+          "learned_oracle_rmse_ms": 0.8345080354934636,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427092:lens:A",
+          "learned_oracle_rmse_ms": 0.7628658117349727,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427093:dipping:A",
+          "learned_oracle_rmse_ms": 0.8849917101523533,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427094:layered:B",
+          "learned_oracle_rmse_ms": 0.7613203377164323,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427095:lens:B",
+          "learned_oracle_rmse_ms": 0.771492900055394,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427096:dipping:B",
+          "learned_oracle_rmse_ms": 1.0919404683790852,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427097:layered:A",
+          "learned_oracle_rmse_ms": 0.6957069952264829,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427098:lens:A",
+          "learned_oracle_rmse_ms": 0.6624236085834558,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427099:dipping:A",
+          "learned_oracle_rmse_ms": 0.7863662461752902,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427100:layered:B",
+          "learned_oracle_rmse_ms": 0.8688215442082976,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427101:lens:B",
+          "learned_oracle_rmse_ms": 0.7433582789828487,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427102:dipping:B",
+          "learned_oracle_rmse_ms": 1.0750925302522822,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427103:layered:A",
+          "learned_oracle_rmse_ms": 0.7174873940221915,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427104:lens:A",
+          "learned_oracle_rmse_ms": 0.6027295216017624,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427105:dipping:A",
+          "learned_oracle_rmse_ms": 0.9189403137022097,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427106:layered:B",
+          "learned_oracle_rmse_ms": 0.9428244608839303,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427107:lens:B",
+          "learned_oracle_rmse_ms": 0.7545487028050227,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427108:dipping:B",
+          "learned_oracle_rmse_ms": 1.1398619615539807,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427109:layered:A",
+          "learned_oracle_rmse_ms": 0.6810474943497031,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427110:lens:A",
+          "learned_oracle_rmse_ms": 0.8118944863137153,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427111:dipping:A",
+          "learned_oracle_rmse_ms": 0.7611163231275972,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427112:layered:B",
+          "learned_oracle_rmse_ms": 0.8044538990082495,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427113:lens:B",
+          "learned_oracle_rmse_ms": 0.756226990036047,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427114:dipping:B",
+          "learned_oracle_rmse_ms": 0.8879470558852778,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427115:layered:A",
+          "learned_oracle_rmse_ms": 0.858192761551964,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427116:lens:A",
+          "learned_oracle_rmse_ms": 0.69597175341078,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427117:dipping:A",
+          "learned_oracle_rmse_ms": 1.1571908227310992,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427118:layered:B",
+          "learned_oracle_rmse_ms": 0.7367487714661352,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427119:lens:B",
+          "learned_oracle_rmse_ms": 0.7273598677464922,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427120:dipping:B",
+          "learned_oracle_rmse_ms": 0.7001651419893329,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427121:layered:A",
+          "learned_oracle_rmse_ms": 0.8192526833081408,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427122:lens:A",
+          "learned_oracle_rmse_ms": 0.6816032534526478,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427123:dipping:A",
+          "learned_oracle_rmse_ms": 0.9351349445042183,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427124:layered:B",
+          "learned_oracle_rmse_ms": 0.9344676830792223,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427125:lens:B",
+          "learned_oracle_rmse_ms": 0.6816865012772928,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427126:dipping:B",
+          "learned_oracle_rmse_ms": 0.7394611602733825,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427127:layered:A",
+          "learned_oracle_rmse_ms": 0.679320174644859,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427128:lens:A",
+          "learned_oracle_rmse_ms": 0.7018572158794069,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427129:dipping:A",
+          "learned_oracle_rmse_ms": 0.7836231301706477,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427130:layered:B",
+          "learned_oracle_rmse_ms": 0.7601184610218481,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427131:lens:B",
+          "learned_oracle_rmse_ms": 0.7240793591904549,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427132:dipping:B",
+          "learned_oracle_rmse_ms": 0.8460116566452697,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427133:layered:A",
+          "learned_oracle_rmse_ms": 0.9216175576986727,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427134:lens:A",
+          "learned_oracle_rmse_ms": 0.6957275983502815,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427135:dipping:A",
+          "learned_oracle_rmse_ms": 0.7651567866177905,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427136:layered:B",
+          "learned_oracle_rmse_ms": 0.9984792573409804,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427137:lens:B",
+          "learned_oracle_rmse_ms": 0.7093776731560245,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427138:dipping:B",
+          "learned_oracle_rmse_ms": 0.7667386873442725,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427139:layered:A",
+          "learned_oracle_rmse_ms": 0.8588613976516164,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427140:lens:A",
+          "learned_oracle_rmse_ms": 0.7541413734395277,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427141:dipping:A",
+          "learned_oracle_rmse_ms": 0.7777355836623199,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427142:layered:B",
+          "learned_oracle_rmse_ms": 0.7619422809907449,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427143:lens:B",
+          "learned_oracle_rmse_ms": 0.7371141891028524,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427144:dipping:B",
+          "learned_oracle_rmse_ms": 0.9355938761780381,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427145:layered:A",
+          "learned_oracle_rmse_ms": 0.9801982024548843,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427146:lens:A",
+          "learned_oracle_rmse_ms": 0.7361280026437889,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427147:dipping:A",
+          "learned_oracle_rmse_ms": 0.9415746915501747,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427148:layered:B",
+          "learned_oracle_rmse_ms": 0.7867369044692955,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427149:lens:B",
+          "learned_oracle_rmse_ms": 0.6733642489735557,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427150:dipping:B",
+          "learned_oracle_rmse_ms": 0.9948862954548809,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427151:layered:A",
+          "learned_oracle_rmse_ms": 0.8675393504877205,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427152:lens:A",
+          "learned_oracle_rmse_ms": 0.7359490919875784,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427153:dipping:A",
+          "learned_oracle_rmse_ms": 0.9701518801797475,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427154:layered:B",
+          "learned_oracle_rmse_ms": 0.8292198998265876,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427155:lens:B",
+          "learned_oracle_rmse_ms": 0.6417727520787212,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427156:dipping:B",
+          "learned_oracle_rmse_ms": 0.9652707468556323,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427157:layered:A",
+          "learned_oracle_rmse_ms": 0.7124925951566753,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427158:lens:A",
+          "learned_oracle_rmse_ms": 0.7041078298139636,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427159:dipping:A",
+          "learned_oracle_rmse_ms": 0.7771500724494732,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:id_test:427160:layered:B",
+          "learned_oracle_rmse_ms": 0.7835439425148198,
+          "forward_threshold_exceeded": false
+        }
+      ]
+    },
+    "family_only": {
+      "count": 80,
+      "exceedances": 80,
+      "non_exceedances": 0,
+      "exceedance_fraction": 1.0,
+      "records": [
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437001:fault:A",
+          "learned_oracle_rmse_ms": 2.292648701203987,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437002:salt:A",
+          "learned_oracle_rmse_ms": 2.170884392682663,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437003:fault:B",
+          "learned_oracle_rmse_ms": 1.9158959016161556,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437004:salt:B",
+          "learned_oracle_rmse_ms": 2.360306307389264,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437005:fault:A",
+          "learned_oracle_rmse_ms": 2.7306300051875696,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437006:salt:A",
+          "learned_oracle_rmse_ms": 2.156830009221204,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437007:fault:B",
+          "learned_oracle_rmse_ms": 2.1564795062282855,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437008:salt:B",
+          "learned_oracle_rmse_ms": 2.8967010055409466,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437009:fault:A",
+          "learned_oracle_rmse_ms": 2.164850813908048,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437010:salt:A",
+          "learned_oracle_rmse_ms": 2.673202415286537,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437011:fault:B",
+          "learned_oracle_rmse_ms": 2.2435575974477056,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437012:salt:B",
+          "learned_oracle_rmse_ms": 2.852706406876203,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437013:fault:A",
+          "learned_oracle_rmse_ms": 1.5519544445992568,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437014:salt:A",
+          "learned_oracle_rmse_ms": 2.6300319523887135,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437015:fault:B",
+          "learned_oracle_rmse_ms": 1.6538760714589762,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437016:salt:B",
+          "learned_oracle_rmse_ms": 2.4329599146112635,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437017:fault:A",
+          "learned_oracle_rmse_ms": 2.3293339464177074,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437018:salt:A",
+          "learned_oracle_rmse_ms": 2.2397326086742875,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437019:fault:B",
+          "learned_oracle_rmse_ms": 2.312949118507987,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437020:salt:B",
+          "learned_oracle_rmse_ms": 2.3113160951303917,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437021:fault:A",
+          "learned_oracle_rmse_ms": 1.6285108054194957,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437022:salt:A",
+          "learned_oracle_rmse_ms": 2.919057857415754,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437023:fault:B",
+          "learned_oracle_rmse_ms": 1.8541880468283856,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437024:salt:B",
+          "learned_oracle_rmse_ms": 2.576010188956171,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437025:fault:A",
+          "learned_oracle_rmse_ms": 2.8056599017019517,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437026:salt:A",
+          "learned_oracle_rmse_ms": 2.9520938542816366,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437027:fault:B",
+          "learned_oracle_rmse_ms": 1.6179991023254747,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437028:salt:B",
+          "learned_oracle_rmse_ms": 2.4225829904696443,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437029:fault:A",
+          "learned_oracle_rmse_ms": 1.69763477172274,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437030:salt:A",
+          "learned_oracle_rmse_ms": 2.5721737188674005,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437031:fault:B",
+          "learned_oracle_rmse_ms": 2.351987358915896,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437032:salt:B",
+          "learned_oracle_rmse_ms": 2.2246403450703682,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437033:fault:A",
+          "learned_oracle_rmse_ms": 1.6724781746906374,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437034:salt:A",
+          "learned_oracle_rmse_ms": 2.5289956229776154,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437035:fault:B",
+          "learned_oracle_rmse_ms": 1.5361884619372572,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437036:salt:B",
+          "learned_oracle_rmse_ms": 2.7485032099292983,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437037:fault:A",
+          "learned_oracle_rmse_ms": 1.6026831810853763,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437038:salt:A",
+          "learned_oracle_rmse_ms": 2.851841667057387,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437039:fault:B",
+          "learned_oracle_rmse_ms": 1.6075769781211122,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437040:salt:B",
+          "learned_oracle_rmse_ms": 2.71253287336662,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437041:fault:A",
+          "learned_oracle_rmse_ms": 2.238044294224287,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437042:salt:A",
+          "learned_oracle_rmse_ms": 2.450455448055835,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437043:fault:B",
+          "learned_oracle_rmse_ms": 1.9596939644913625,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437044:salt:B",
+          "learned_oracle_rmse_ms": 2.765835383604791,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437045:fault:A",
+          "learned_oracle_rmse_ms": 1.839489123729768,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437046:salt:A",
+          "learned_oracle_rmse_ms": 2.6783015622250237,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437047:fault:B",
+          "learned_oracle_rmse_ms": 2.5580647493383273,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437048:salt:B",
+          "learned_oracle_rmse_ms": 2.7703373114821144,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437049:fault:A",
+          "learned_oracle_rmse_ms": 1.8165685351931722,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437050:salt:A",
+          "learned_oracle_rmse_ms": 2.360558569755286,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437051:fault:B",
+          "learned_oracle_rmse_ms": 1.7058591561742855,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437052:salt:B",
+          "learned_oracle_rmse_ms": 2.4814075329331784,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437053:fault:A",
+          "learned_oracle_rmse_ms": 2.154049570974733,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437054:salt:A",
+          "learned_oracle_rmse_ms": 2.0791615707210256,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437055:fault:B",
+          "learned_oracle_rmse_ms": 1.5118673910569562,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437056:salt:B",
+          "learned_oracle_rmse_ms": 2.145563733680627,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437057:fault:A",
+          "learned_oracle_rmse_ms": 1.8065917523667634,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437058:salt:A",
+          "learned_oracle_rmse_ms": 2.318532178952644,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437059:fault:B",
+          "learned_oracle_rmse_ms": 2.633603519307428,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437060:salt:B",
+          "learned_oracle_rmse_ms": 2.696747746543353,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437061:fault:A",
+          "learned_oracle_rmse_ms": 1.9483379146847388,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437062:salt:A",
+          "learned_oracle_rmse_ms": 2.4260807003841593,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437063:fault:B",
+          "learned_oracle_rmse_ms": 2.157397317192148,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437064:salt:B",
+          "learned_oracle_rmse_ms": 2.53553400222853,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437065:fault:A",
+          "learned_oracle_rmse_ms": 1.6141544621876505,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437066:salt:A",
+          "learned_oracle_rmse_ms": 2.463405572835416,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437067:fault:B",
+          "learned_oracle_rmse_ms": 1.99271522657533,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437068:salt:B",
+          "learned_oracle_rmse_ms": 2.6144173742677195,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437069:fault:A",
+          "learned_oracle_rmse_ms": 1.739886007042142,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437070:salt:A",
+          "learned_oracle_rmse_ms": 2.855301617659314,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437071:fault:B",
+          "learned_oracle_rmse_ms": 2.113846378458163,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437072:salt:B",
+          "learned_oracle_rmse_ms": 2.54913445567428,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437073:fault:A",
+          "learned_oracle_rmse_ms": 1.4571598889400836,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437074:salt:A",
+          "learned_oracle_rmse_ms": 2.4875791614460963,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437075:fault:B",
+          "learned_oracle_rmse_ms": 1.81193202928022,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437076:salt:B",
+          "learned_oracle_rmse_ms": 2.443342496231871,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437077:fault:A",
+          "learned_oracle_rmse_ms": 2.4155843216192348,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437078:salt:A",
+          "learned_oracle_rmse_ms": 2.093656258231103,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437079:fault:B",
+          "learned_oracle_rmse_ms": 2.3330677649867773,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:family_only:437080:salt:B",
+          "learned_oracle_rmse_ms": 2.291181151982948,
+          "forward_threshold_exceeded": true
+        }
+      ]
+    },
+    "acquisition_only": {
+      "count": 80,
+      "exceedances": 3,
+      "non_exceedances": 77,
+      "exceedance_fraction": 0.0375,
+      "records": [
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447001:layered:C",
+          "learned_oracle_rmse_ms": 0.7421656390091961,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447002:lens:C",
+          "learned_oracle_rmse_ms": 0.7237443869865439,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447003:dipping:C",
+          "learned_oracle_rmse_ms": 0.9194149390491515,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447004:layered:C",
+          "learned_oracle_rmse_ms": 0.7542775227995959,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447005:lens:C",
+          "learned_oracle_rmse_ms": 0.7263426843235168,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447006:dipping:C",
+          "learned_oracle_rmse_ms": 1.0584743497362248,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447007:layered:C",
+          "learned_oracle_rmse_ms": 0.8204419222360492,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447008:lens:C",
+          "learned_oracle_rmse_ms": 0.6926382399176231,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447009:dipping:C",
+          "learned_oracle_rmse_ms": 0.7023528185896855,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447010:layered:C",
+          "learned_oracle_rmse_ms": 0.7872111424012358,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447011:lens:C",
+          "learned_oracle_rmse_ms": 0.7117909708008775,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447012:dipping:C",
+          "learned_oracle_rmse_ms": 0.9830024694305051,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447013:layered:C",
+          "learned_oracle_rmse_ms": 0.8047700645709639,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447014:lens:C",
+          "learned_oracle_rmse_ms": 0.7930765118022366,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447015:dipping:C",
+          "learned_oracle_rmse_ms": 1.1187352751582198,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447016:layered:C",
+          "learned_oracle_rmse_ms": 0.9458735245105171,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447017:lens:C",
+          "learned_oracle_rmse_ms": 0.6256045366551,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447018:dipping:C",
+          "learned_oracle_rmse_ms": 1.0346863819283088,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447019:layered:C",
+          "learned_oracle_rmse_ms": 0.9980947298208644,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447020:lens:C",
+          "learned_oracle_rmse_ms": 0.7312764036310458,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447021:dipping:C",
+          "learned_oracle_rmse_ms": 1.0133378969744744,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447022:layered:C",
+          "learned_oracle_rmse_ms": 0.9160243736269728,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447023:lens:C",
+          "learned_oracle_rmse_ms": 0.6158100629195314,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447024:dipping:C",
+          "learned_oracle_rmse_ms": 0.9752421639279722,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447025:layered:C",
+          "learned_oracle_rmse_ms": 0.7012755299165241,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447026:lens:C",
+          "learned_oracle_rmse_ms": 0.7249989155588153,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447027:dipping:C",
+          "learned_oracle_rmse_ms": 0.9187855752298468,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447028:layered:C",
+          "learned_oracle_rmse_ms": 0.871538763628569,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447029:lens:C",
+          "learned_oracle_rmse_ms": 0.6641476293027816,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447030:dipping:C",
+          "learned_oracle_rmse_ms": 1.065890148681883,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447031:layered:C",
+          "learned_oracle_rmse_ms": 0.9346862961655473,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447032:lens:C",
+          "learned_oracle_rmse_ms": 0.6579915136330321,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447033:dipping:C",
+          "learned_oracle_rmse_ms": 1.0284276422651006,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447034:layered:C",
+          "learned_oracle_rmse_ms": 0.6799626713063912,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447035:lens:C",
+          "learned_oracle_rmse_ms": 0.6216299485367704,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447036:dipping:C",
+          "learned_oracle_rmse_ms": 0.8989001431565213,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447037:layered:C",
+          "learned_oracle_rmse_ms": 0.966458703565571,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447038:lens:C",
+          "learned_oracle_rmse_ms": 0.7651644509697456,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447039:dipping:C",
+          "learned_oracle_rmse_ms": 0.937858928937809,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447040:layered:C",
+          "learned_oracle_rmse_ms": 0.8549655542396085,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447041:lens:C",
+          "learned_oracle_rmse_ms": 0.6417108600880262,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447042:dipping:C",
+          "learned_oracle_rmse_ms": 0.9350313429806331,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447043:layered:C",
+          "learned_oracle_rmse_ms": 0.890871666583356,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447044:lens:C",
+          "learned_oracle_rmse_ms": 0.628301106953974,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447045:dipping:C",
+          "learned_oracle_rmse_ms": 0.9353299375703479,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447046:layered:C",
+          "learned_oracle_rmse_ms": 0.7833368725180323,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447047:lens:C",
+          "learned_oracle_rmse_ms": 0.6826113106332952,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447048:dipping:C",
+          "learned_oracle_rmse_ms": 0.8342452332645484,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447049:layered:C",
+          "learned_oracle_rmse_ms": 0.7297225381480953,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447050:lens:C",
+          "learned_oracle_rmse_ms": 0.8702711747177299,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447051:dipping:C",
+          "learned_oracle_rmse_ms": 0.9575752452458184,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447052:layered:C",
+          "learned_oracle_rmse_ms": 0.7222837177515308,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447053:lens:C",
+          "learned_oracle_rmse_ms": 0.8200024460709586,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447054:dipping:C",
+          "learned_oracle_rmse_ms": 0.9089057743545442,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447055:layered:C",
+          "learned_oracle_rmse_ms": 0.7224083788210032,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447056:lens:C",
+          "learned_oracle_rmse_ms": 0.6784007551461287,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447057:dipping:C",
+          "learned_oracle_rmse_ms": 0.7872942256359176,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447058:layered:C",
+          "learned_oracle_rmse_ms": 0.9600949482738971,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447059:lens:C",
+          "learned_oracle_rmse_ms": 0.8038751737146864,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447060:dipping:C",
+          "learned_oracle_rmse_ms": 0.7999518136384391,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447061:layered:C",
+          "learned_oracle_rmse_ms": 0.8565046365480408,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447062:lens:C",
+          "learned_oracle_rmse_ms": 0.6928703913840765,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447063:dipping:C",
+          "learned_oracle_rmse_ms": 0.9296362400050152,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447064:layered:C",
+          "learned_oracle_rmse_ms": 0.7936495615124638,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447065:lens:C",
+          "learned_oracle_rmse_ms": 0.7253028823549049,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447066:dipping:C",
+          "learned_oracle_rmse_ms": 0.9203879604648831,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447067:layered:C",
+          "learned_oracle_rmse_ms": 0.795718053054048,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447068:lens:C",
+          "learned_oracle_rmse_ms": 0.7692338030920914,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447069:dipping:C",
+          "learned_oracle_rmse_ms": 0.7569696367257718,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447070:layered:C",
+          "learned_oracle_rmse_ms": 0.8087145719032431,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447071:lens:C",
+          "learned_oracle_rmse_ms": 0.6724460037903273,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447072:dipping:C",
+          "learned_oracle_rmse_ms": 0.7471183180214519,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447073:layered:C",
+          "learned_oracle_rmse_ms": 0.9047118655180412,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447074:lens:C",
+          "learned_oracle_rmse_ms": 0.7831199450632162,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447075:dipping:C",
+          "learned_oracle_rmse_ms": 0.6561203037340112,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447076:layered:C",
+          "learned_oracle_rmse_ms": 1.009935261091513,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447077:lens:C",
+          "learned_oracle_rmse_ms": 0.7418307847175138,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447078:dipping:C",
+          "learned_oracle_rmse_ms": 1.0876566168722532,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447079:layered:C",
+          "learned_oracle_rmse_ms": 0.7623867510375215,
+          "forward_threshold_exceeded": false
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:acquisition_only:447080:lens:C",
+          "learned_oracle_rmse_ms": 0.7593762530281344,
+          "forward_threshold_exceeded": false
+        }
+      ]
+    },
+    "joint_ood": {
+      "count": 160,
+      "exceedances": 160,
+      "non_exceedances": 0,
+      "exceedance_fraction": 1.0,
+      "records": [
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457001:fault:C",
+          "learned_oracle_rmse_ms": 2.422846322439256,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457002:salt:C",
+          "learned_oracle_rmse_ms": 2.744302282720612,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457003:fault:C",
+          "learned_oracle_rmse_ms": 2.028329057858067,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457004:salt:C",
+          "learned_oracle_rmse_ms": 2.858047548706092,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457005:fault:C",
+          "learned_oracle_rmse_ms": 1.4114718178632328,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457006:salt:C",
+          "learned_oracle_rmse_ms": 2.447949121321573,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457007:fault:C",
+          "learned_oracle_rmse_ms": 2.264848209103611,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457008:salt:C",
+          "learned_oracle_rmse_ms": 2.7491464865418935,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457009:fault:C",
+          "learned_oracle_rmse_ms": 1.8059045666629496,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457010:salt:C",
+          "learned_oracle_rmse_ms": 2.327266039174656,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457011:fault:C",
+          "learned_oracle_rmse_ms": 1.9873784842972149,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457012:salt:C",
+          "learned_oracle_rmse_ms": 2.4373676027441222,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457013:fault:C",
+          "learned_oracle_rmse_ms": 1.9731084287807092,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457014:salt:C",
+          "learned_oracle_rmse_ms": 2.39251262287358,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457015:fault:C",
+          "learned_oracle_rmse_ms": 1.6169384019786857,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457016:salt:C",
+          "learned_oracle_rmse_ms": 2.606239429166904,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457017:fault:C",
+          "learned_oracle_rmse_ms": 2.227560219802245,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457018:salt:C",
+          "learned_oracle_rmse_ms": 2.618188286465113,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457019:fault:C",
+          "learned_oracle_rmse_ms": 1.9320254469967275,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457020:salt:C",
+          "learned_oracle_rmse_ms": 2.510324151311769,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457021:fault:C",
+          "learned_oracle_rmse_ms": 2.5630752186904293,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457022:salt:C",
+          "learned_oracle_rmse_ms": 2.608500996800762,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457023:fault:C",
+          "learned_oracle_rmse_ms": 1.5706567894158452,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457024:salt:C",
+          "learned_oracle_rmse_ms": 2.4745332783115024,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457025:fault:C",
+          "learned_oracle_rmse_ms": 2.6098493258048463,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457026:salt:C",
+          "learned_oracle_rmse_ms": 2.848691939550245,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457027:fault:C",
+          "learned_oracle_rmse_ms": 2.2023997029246503,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457028:salt:C",
+          "learned_oracle_rmse_ms": 2.4955704669559204,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457029:fault:C",
+          "learned_oracle_rmse_ms": 2.539318157407245,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457030:salt:C",
+          "learned_oracle_rmse_ms": 2.8307870057243942,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457031:fault:C",
+          "learned_oracle_rmse_ms": 2.270976226046406,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457032:salt:C",
+          "learned_oracle_rmse_ms": 2.5646440468070715,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457033:fault:C",
+          "learned_oracle_rmse_ms": 2.2624374564159764,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457034:salt:C",
+          "learned_oracle_rmse_ms": 2.1842246221556225,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457035:fault:C",
+          "learned_oracle_rmse_ms": 1.7667742473263206,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457036:salt:C",
+          "learned_oracle_rmse_ms": 2.0356489418883483,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457037:fault:C",
+          "learned_oracle_rmse_ms": 1.5709449158164297,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457038:salt:C",
+          "learned_oracle_rmse_ms": 2.639395966394397,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457039:fault:C",
+          "learned_oracle_rmse_ms": 2.172626791922617,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457040:salt:C",
+          "learned_oracle_rmse_ms": 2.439572530305328,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457041:fault:C",
+          "learned_oracle_rmse_ms": 2.1555476536589,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457042:salt:C",
+          "learned_oracle_rmse_ms": 2.977218528300891,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457043:fault:C",
+          "learned_oracle_rmse_ms": 1.7733329283885098,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457044:salt:C",
+          "learned_oracle_rmse_ms": 2.8926399064225152,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457045:fault:C",
+          "learned_oracle_rmse_ms": 2.7126341636403244,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457046:salt:C",
+          "learned_oracle_rmse_ms": 2.543917566634936,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457047:fault:C",
+          "learned_oracle_rmse_ms": 2.396856770053819,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457048:salt:C",
+          "learned_oracle_rmse_ms": 2.440776496497162,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457049:fault:C",
+          "learned_oracle_rmse_ms": 2.2296504344016896,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457050:salt:C",
+          "learned_oracle_rmse_ms": 2.7339559227835695,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457051:fault:C",
+          "learned_oracle_rmse_ms": 1.883218601678235,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457052:salt:C",
+          "learned_oracle_rmse_ms": 2.989985061611941,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457053:fault:C",
+          "learned_oracle_rmse_ms": 1.5735562815076682,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457054:salt:C",
+          "learned_oracle_rmse_ms": 2.621521135627221,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457055:fault:C",
+          "learned_oracle_rmse_ms": 2.1034109619659174,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457056:salt:C",
+          "learned_oracle_rmse_ms": 2.7258206449594033,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457057:fault:C",
+          "learned_oracle_rmse_ms": 1.7688250526866143,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457058:salt:C",
+          "learned_oracle_rmse_ms": 2.515491040862548,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457059:fault:C",
+          "learned_oracle_rmse_ms": 2.489724761497785,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457060:salt:C",
+          "learned_oracle_rmse_ms": 2.6788314005245866,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457061:fault:C",
+          "learned_oracle_rmse_ms": 1.8210580045604663,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457062:salt:C",
+          "learned_oracle_rmse_ms": 2.3655539889105754,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457063:fault:C",
+          "learned_oracle_rmse_ms": 1.5855931824134337,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457064:salt:C",
+          "learned_oracle_rmse_ms": 2.4948038997013104,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457065:fault:C",
+          "learned_oracle_rmse_ms": 2.3260273410036088,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457066:salt:C",
+          "learned_oracle_rmse_ms": 2.652843218555885,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457067:fault:C",
+          "learned_oracle_rmse_ms": 1.6853827313195642,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457068:salt:C",
+          "learned_oracle_rmse_ms": 2.539163661383634,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457069:fault:C",
+          "learned_oracle_rmse_ms": 1.768621062845003,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457070:salt:C",
+          "learned_oracle_rmse_ms": 2.1973474520520706,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457071:fault:C",
+          "learned_oracle_rmse_ms": 1.8903857083387048,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457072:salt:C",
+          "learned_oracle_rmse_ms": 2.6489920358116246,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457073:fault:C",
+          "learned_oracle_rmse_ms": 1.6626438863880189,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457074:salt:C",
+          "learned_oracle_rmse_ms": 2.6968816281381534,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457075:fault:C",
+          "learned_oracle_rmse_ms": 2.303719178828677,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457076:salt:C",
+          "learned_oracle_rmse_ms": 2.7868223037324773,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457077:fault:C",
+          "learned_oracle_rmse_ms": 2.4344056341579616,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457078:salt:C",
+          "learned_oracle_rmse_ms": 2.541483114021825,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457079:fault:C",
+          "learned_oracle_rmse_ms": 1.9322671167690075,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457080:salt:C",
+          "learned_oracle_rmse_ms": 2.1732456719973157,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457081:fault:C",
+          "learned_oracle_rmse_ms": 2.551173985108111,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457082:salt:C",
+          "learned_oracle_rmse_ms": 2.747239659118744,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457083:fault:C",
+          "learned_oracle_rmse_ms": 2.406038407101549,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457084:salt:C",
+          "learned_oracle_rmse_ms": 2.065452544214915,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457085:fault:C",
+          "learned_oracle_rmse_ms": 2.107501344153579,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457086:salt:C",
+          "learned_oracle_rmse_ms": 3.1141871965872165,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457087:fault:C",
+          "learned_oracle_rmse_ms": 2.6161150740304215,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457088:salt:C",
+          "learned_oracle_rmse_ms": 2.4836532525944515,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457089:fault:C",
+          "learned_oracle_rmse_ms": 2.629419905939359,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457090:salt:C",
+          "learned_oracle_rmse_ms": 2.8800605577265337,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457091:fault:C",
+          "learned_oracle_rmse_ms": 1.7762616639586513,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457092:salt:C",
+          "learned_oracle_rmse_ms": 2.771548158676597,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457093:fault:C",
+          "learned_oracle_rmse_ms": 2.4946019265496195,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457094:salt:C",
+          "learned_oracle_rmse_ms": 2.3893041753492708,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457095:fault:C",
+          "learned_oracle_rmse_ms": 2.6074058099876676,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457096:salt:C",
+          "learned_oracle_rmse_ms": 2.2600485344685644,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457097:fault:C",
+          "learned_oracle_rmse_ms": 1.6516583286138935,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457098:salt:C",
+          "learned_oracle_rmse_ms": 2.117912365703168,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457099:fault:C",
+          "learned_oracle_rmse_ms": 2.334390645385316,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457100:salt:C",
+          "learned_oracle_rmse_ms": 2.4924259969664146,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457101:fault:C",
+          "learned_oracle_rmse_ms": 1.6585874705212584,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457102:salt:C",
+          "learned_oracle_rmse_ms": 2.4362975088951777,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457103:fault:C",
+          "learned_oracle_rmse_ms": 1.7294307659621473,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457104:salt:C",
+          "learned_oracle_rmse_ms": 2.6200907095007717,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457105:fault:C",
+          "learned_oracle_rmse_ms": 1.6104386454764266,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457106:salt:C",
+          "learned_oracle_rmse_ms": 2.34094387603551,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457107:fault:C",
+          "learned_oracle_rmse_ms": 1.9011293571412566,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457108:salt:C",
+          "learned_oracle_rmse_ms": 2.3371404990206064,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457109:fault:C",
+          "learned_oracle_rmse_ms": 1.8450581622206377,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457110:salt:C",
+          "learned_oracle_rmse_ms": 2.367625390306511,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457111:fault:C",
+          "learned_oracle_rmse_ms": 1.8910565887888073,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457112:salt:C",
+          "learned_oracle_rmse_ms": 2.619773049377241,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457113:fault:C",
+          "learned_oracle_rmse_ms": 1.9828753710636071,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457114:salt:C",
+          "learned_oracle_rmse_ms": 2.4109908236021647,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457115:fault:C",
+          "learned_oracle_rmse_ms": 2.127876662776115,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457116:salt:C",
+          "learned_oracle_rmse_ms": 2.4173573289338255,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457117:fault:C",
+          "learned_oracle_rmse_ms": 2.6442310331794117,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457118:salt:C",
+          "learned_oracle_rmse_ms": 2.3727916177397956,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457119:fault:C",
+          "learned_oracle_rmse_ms": 2.3234883125921164,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457120:salt:C",
+          "learned_oracle_rmse_ms": 2.533590874300558,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457121:fault:C",
+          "learned_oracle_rmse_ms": 2.2538692437416414,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457122:salt:C",
+          "learned_oracle_rmse_ms": 2.488463979279991,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457123:fault:C",
+          "learned_oracle_rmse_ms": 2.460110803931591,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457124:salt:C",
+          "learned_oracle_rmse_ms": 2.1587223449683934,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457125:fault:C",
+          "learned_oracle_rmse_ms": 2.927119687243568,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457126:salt:C",
+          "learned_oracle_rmse_ms": 2.3858588708011244,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457127:fault:C",
+          "learned_oracle_rmse_ms": 2.566505326133241,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457128:salt:C",
+          "learned_oracle_rmse_ms": 2.7244561340629425,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457129:fault:C",
+          "learned_oracle_rmse_ms": 1.680085287086861,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457130:salt:C",
+          "learned_oracle_rmse_ms": 2.581070821449772,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457131:fault:C",
+          "learned_oracle_rmse_ms": 2.1170217906591584,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457132:salt:C",
+          "learned_oracle_rmse_ms": 2.4881945359633937,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457133:fault:C",
+          "learned_oracle_rmse_ms": 1.6494148826007236,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457134:salt:C",
+          "learned_oracle_rmse_ms": 2.402082476593131,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457135:fault:C",
+          "learned_oracle_rmse_ms": 1.9054916684663603,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457136:salt:C",
+          "learned_oracle_rmse_ms": 2.761483121729261,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457137:fault:C",
+          "learned_oracle_rmse_ms": 2.2877103495158724,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457138:salt:C",
+          "learned_oracle_rmse_ms": 2.563732798706455,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457139:fault:C",
+          "learned_oracle_rmse_ms": 1.847737841315368,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457140:salt:C",
+          "learned_oracle_rmse_ms": 2.840244322080174,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457141:fault:C",
+          "learned_oracle_rmse_ms": 1.622536665679997,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457142:salt:C",
+          "learned_oracle_rmse_ms": 2.328806168423735,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457143:fault:C",
+          "learned_oracle_rmse_ms": 2.8536587273971143,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457144:salt:C",
+          "learned_oracle_rmse_ms": 2.3718825361586644,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457145:fault:C",
+          "learned_oracle_rmse_ms": 1.9862028825065103,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457146:salt:C",
+          "learned_oracle_rmse_ms": 2.789333393898437,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457147:fault:C",
+          "learned_oracle_rmse_ms": 1.878216341703108,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457148:salt:C",
+          "learned_oracle_rmse_ms": 2.422059575435622,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457149:fault:C",
+          "learned_oracle_rmse_ms": 2.2254361578179176,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457150:salt:C",
+          "learned_oracle_rmse_ms": 2.4417962801975386,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457151:fault:C",
+          "learned_oracle_rmse_ms": 2.5749527868994746,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457152:salt:C",
+          "learned_oracle_rmse_ms": 2.9795743965379473,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457153:fault:C",
+          "learned_oracle_rmse_ms": 1.9183020089748037,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457154:salt:C",
+          "learned_oracle_rmse_ms": 2.4328991118513863,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457155:fault:C",
+          "learned_oracle_rmse_ms": 2.1161404230050422,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457156:salt:C",
+          "learned_oracle_rmse_ms": 2.6548450779408737,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457157:fault:C",
+          "learned_oracle_rmse_ms": 2.7522306245770514,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457158:salt:C",
+          "learned_oracle_rmse_ms": 2.0761939056298973,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457159:fault:C",
+          "learned_oracle_rmse_ms": 1.8782920367431146,
+          "forward_threshold_exceeded": true
+        },
+        {
+          "id": "m12-nullspace-residual/v1.1:joint_ood:457160:salt:C",
+          "learned_oracle_rmse_ms": 2.9239864355891543,
+          "forward_threshold_exceeded": true
+        }
+      ]
+    }
+  },
+  "descriptive_rates": {
+    "id_test_specificity": 0.95625,
+    "joint_ood_sensitivity": 1.0,
+    "interpretation": "synthetic cohort diagnostics only; not a calibrated field detector"
+  },
+  "scope": {
+    "original_receipt_modified": false,
+    "original_rmse_metrics_changed": false,
+    "scientific_acceptance": false,
+    "field_validity": false
+  }
+}

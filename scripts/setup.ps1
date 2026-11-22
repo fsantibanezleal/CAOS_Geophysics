@@ -1,8 +1,61 @@
-param([switch]$Gpu)
+param([switch]$Gpu, [switch]$Notebooks, [switch]$M08, [switch]$Api, [switch]$Ert)
 $ErrorActionPreference = 'Stop'
 Set-Location (Join-Path $PSScriptRoot '..')
 $py = if (Get-Command py -ErrorAction SilentlyContinue) { 'py -3.12' } else { 'python' }
-function VenvPy($dir) { $p = Join-Path $dir 'Scripts/python.exe'; if (-not (Test-Path $p)) { $p = Join-Path $dir 'bin/python' }; return $p }
+function VenvPy($dir) {
+  $root = Join-Path (Get-Location).Path $dir
+  $p = Join-Path $root 'Scripts/python.exe'
+  if (-not (Test-Path -LiteralPath $p)) { $p = Join-Path $root 'bin/python' }
+  if (-not (Test-Path -LiteralPath $p)) { throw "Python interpreter was not created in $root" }
+  return (Get-Item -LiteralPath $p).FullName
+}
+if ($Api) {
+  Write-Host '[setup] creating isolated .venv-api'
+  if (-not (Test-Path '.venv-api')) { Invoke-Expression "$py -m venv .venv-api" }
+  $apiPython = VenvPy '.venv-api'
+  & $apiPython -m pip install --upgrade pip -q
+  & $apiPython -m pip install -r requirements-api.txt -r requirements-dev.txt -r requirements-api-test.txt -q
+  & $apiPython -m pip check
+  Write-Host '[setup] creating the dedicated .venv-gravity child runtime'
+  if (-not (Test-Path '.venv-gravity')) { Invoke-Expression "$py -m venv .venv-gravity" }
+  $gravityPython = VenvPy '.venv-gravity'
+  & $gravityPython -m pip install --upgrade pip -q
+  & $gravityPython -m pip install -r requirements-gravity-runtime.txt -q
+  & $gravityPython -m pip check
+  Write-Host '[setup] API and M02 test environments ready. Run .\.venv-api\Scripts\python.exe -m pytest tests\api -q.'
+  exit 0
+}
+if ($Notebooks) {
+  Write-Host '[setup] creating isolated .venv-notebooks'
+  if (-not (Test-Path '.venv-notebooks')) { Invoke-Expression "$py -m venv .venv-notebooks" }
+  # PowerShell variables are case-insensitive: `$notebooks` aliases the
+  # `[switch]$Notebooks` parameter and attempts to assign a path to a switch.
+  $notebookPython = VenvPy '.venv-notebooks'
+  & $notebookPython -m pip install --upgrade pip -q
+  & $notebookPython -m pip install -r notebooks/requirements.txt --extra-index-url https://download.pytorch.org/whl/cpu -q
+  Write-Host '[setup] notebook environment ready. Run .\.venv-notebooks\Scripts\python.exe scripts/run_notebooks.py --check --tmp <device-temp-root>.'
+  exit 0
+}
+if ($Ert) {
+  Write-Host '[setup] creating isolated .venv-ert for the pyGIMLi M07 experiment'
+  if (-not (Test-Path '.venv-ert')) { Invoke-Expression "$py -m venv .venv-ert" }
+  $ertPython = VenvPy '.venv-ert'
+  & $ertPython -m pip install --upgrade pip -q
+  & $ertPython -m pip install -r data-pipeline/requirements-ert.txt -q
+  & $ertPython -m pip check
+  Write-Host '[setup] M07 solver ready. Run scripts/run_notebooks.py --only notebooks/en/05-ert/02-ert-inversion.ipynb.'
+  exit 0
+}
+if ($M08) {
+  Write-Host '[setup] creating isolated .venv-m08'
+  if (-not (Test-Path '.venv-m08')) { Invoke-Expression "$py -m venv .venv-m08" }
+  $m08Python = VenvPy '.venv-m08'
+  & $m08Python -m pip install --upgrade pip -q
+  & $m08Python -m pip install -r data-pipeline/requirements-m08.txt -q
+  & $m08Python -m pip check
+  Write-Host '[setup] M08 environment ready. Set M08_TEST_SCIENCE_PYTHON to .venv-m08/Scripts/python.exe for local validation.'
+  exit 0
+}
 Write-Host '[setup] creating root .venv and offline .venv-pipeline'
 if (-not (Test-Path '.venv')) { Invoke-Expression "$py -m venv .venv" }
 if (-not (Test-Path '.venv-pipeline')) { Invoke-Expression "$py -m venv .venv-pipeline" }

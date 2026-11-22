@@ -1,0 +1,101 @@
+\begin{table}[htbp]
+\centering
+\small
+\caption{Frozen synthetic cohorts separate interpolation, family shift, acquisition shift, and their joint combination across the declared two-dimensional ray layouts.}
+\label{tab:cohorts}
+\begin{tabular}{lrrll}
+\toprule
+Cohort & $n$ & Seed base & Families & Acquisition layouts \\
+\midrule
+Training & 800 & 117001 & layered, lens, dipping & A, B \\
+Validation & 160 & 127001 & layered, lens, dipping & A, B \\
+In-distribution test & 160 & 137001 & layered, lens, dipping & A, B \\
+Family-shift test & 80 & 147001 & fault, salt & A, B \\
+Acquisition-shift test & 80 & 157001 & layered, lens, dipping & C \\
+Joint-shift test & 160 & 167001 & fault, salt & C \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{The frozen learned model is compared with a validation-selected regularized ray inverse on identical held-out cases.}
+\label{tab:primary}
+\begin{tabular}{lrrrrr}
+\toprule
+Cohort & $n$ & Velocity ratio (95\% CI) & Time ratio (95\% CI) & Flags \\
+\midrule
+In distribution & 160 & 3.034 (2.942, 3.124) & 4.957 (4.748, 5.172) & 14 \\
+Family shift & 80 & 2.178 (2.097, 2.275) & 5.733 (5.626, 5.840) & 80 \\
+Acquisition shift & 80 & 3.092 (2.961, 3.229) & 5.268 (4.987, 5.576) & 6 \\
+Joint shift & 160 & 2.194 (2.133, 2.264) & 5.585 (5.509, 5.662) & 160 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\scriptsize
+\caption{Channel-ablation models evaluated on new test-cohort seeds retain larger errors than the matched inverse across every held-out synthetic cohort; the training seed is unchanged.}
+\label{tab:ablation}
+\begin{tabular}{llrrr}
+\toprule
+Model & Cohort & Velocity ratio (95\% CI) & Time ratio (95\% CI) & Flags \\
+\midrule
+Both channels & In distribution & 2.877 (2.792, 2.964) & 4.731 (4.542, 4.920) & 8 \\
+Residual only & In distribution & 3.419 (3.319, 3.519) & 4.985 (4.771, 5.207) & 7 \\
+Coverage only & In distribution & 11.098 (10.496, 11.705) & 27.711 (26.759, 28.650) & 8 \\
+Both channels & Family shift & 2.220 (2.136, 2.322) & 5.616 (5.506, 5.728) & 80 \\
+Residual only & Family shift & 2.344 (2.237, 2.473) & 5.860 (5.725, 6.002) & 80 \\
+Coverage only & Family shift & 3.642 (3.302, 4.054) & 12.868 (11.947, 13.834) & 22 \\
+Both channels & Acquisition shift & 3.080 (2.949, 3.217) & 5.417 (5.128, 5.733) & 8 \\
+Residual only & Acquisition shift & 3.467 (3.326, 3.612) & 5.457 (5.109, 5.822) & 8 \\
+Coverage only & Acquisition shift & 10.987 (10.080, 11.906) & 28.635 (27.309, 30.010) & 6 \\
+Both channels & Joint shift & 2.216 (2.153, 2.289) & 5.597 (5.515, 5.680) & 160 \\
+Residual only & Joint shift & 2.327 (2.252, 2.412) & 5.757 (5.665, 5.850) & 160 \\
+Coverage only & Joint shift & 3.597 (3.358, 3.877) & 12.765 (12.170, 13.370) & 51 \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\begin{table}[htbp]
+\centering
+\small
+\caption{Model and solver settings define the trained convolutional estimate and validation-selected ray inverse used for every held-out synthetic cohort.}
+\label{tab:parameters}
+\begin{tabular}{ll}
+\toprule
+Quantity & Value \\
+\midrule
+Grid and domain & $16\times16$, $800\times800$ m, 50 m cells \\
+Velocity bounds & 1400--4000 m/s \\
+Training cases / validation cases & 800 / 160 \\
+Optimizer / learning rate / epochs & Adam / 0.001 / 40 \\
+Mini-batch / initialization seed & 64 / 77213 \\
+Training objective scales & 400 m/s for velocity; 10 ms for travel time \\
+Ray-inverse candidates / selected value & 1, 10, 100, 1000 / 100 \\
+Held-out family / acquisition layouts & fault and salt / C \\
+Primary selected epoch & 40 \\
+Primary GPU training time & 37.51 s \\
+Ablation GPU training and scoring time & 30.45 s \\
+\bottomrule
+\end{tabular}
+\end{table}
+
+\clearpage
+\begin{table}[htbp]
+\centering
+\small
+\caption{Coverage and eigenvalue summaries quantify rank and angular support of each fixed straight-ray acquisition layout on the 16 by 16 grid.}
+\label{tab:kernel-diagnostics}
+\begin{tabular}{lrrrrrr}
+\toprule
+Layout & Rays & Supported cells & Rank & Support (\%) & Axial angles & Max gap ($^\circ$) \\
+\midrule
+A & 128 & 252 & 126 & 98.4 & 128 & 11.30 \\
+B & 128 & 254 & 128 & 99.2 & 128 & 10.96 \\
+C & 128 & 251 & 127 & 98.0 & 116 & 11.64 \\
+\bottomrule
+\end{tabular}
+\end{table}

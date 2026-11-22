@@ -1,0 +1,26 @@
+{
+  "schema": "geophysics.m13-browser-attribution-e2e/v1",
+  "requirement": "R-019",
+  "command": "npx playwright test -c playwright.phase-picker.config.ts",
+  "result": "passed",
+  "runner_exit_code": 0,
+  "test_count": 4,
+  "passed": 4,
+  "failed": 0,
+  "skipped": 0,
+  "duration_ms": 148818.0,
+  "test_titles": [
+    "M13 runs a hash-verified held-out STEAD trace in-browser and exports valid model scores",
+    "adversarial: rejects a held-out waveform whose bytes no longer match its manifest hash",
+    "adversarial: reports a bad curated model digest and leaves inference unavailable",
+    "adversarial: unsupported local trace is identified and cannot enter inference"
+  ],
+  "tested_commit": "7f254523e29ad0e5663f031e0ef3b332b0478cfd",
+  "working_tree_dirty": true,
+  "working_tree_changed_path_count": 325,
+  "playwright_config_sha256": "24320f8ba6a8a208e465c6bc68059c5f333a0fbdb82d32f33a8fad6a360910b9",
+  "test_file_sha256": "ea66f0c624cb61d70df88092a8f884b5d056e212dc3aafbdee5106f1df209dd0",
+  "built_index_sha256": "379e77f953f8616d138f1e339b0e7be48f920d68805f10ec56f8e53fe3bde4b7",
+  "raw_playwright_report_sha256": "83bc7f3acd8f4f5911fd1db8672eabd7153c05a9a24f3fbaeb950238a3e75bad",
+  "scope_note": "Fresh local production build and preview. Exercises reviewed STEAD asset loading and attribution, a hash-verified held-out trace, retained QC refusal, browser inference, probability export, and three adversarial refusal paths with zero API requests. Measured from a dirty working tree; bounded UI integration evidence only, not independent model validation, whole-product acceptance, or deployment acceptance."
+}

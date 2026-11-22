@@ -1,7 +1,7 @@
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import {
   normalizeCounts, parseLocalTrace, parseNormalizedF32, parsePhaseBenchmark, parsePhaseManifest,
-  validateProbabilities, PHASE_SAMPLES,
+  validateProbabilities, verifiedFetch, PHASE_SAMPLES,
 } from "../phase-picker";
 
 const hash = "a".repeat(64);
@@ -26,8 +26,15 @@ const manifest = () => ({
   selection: { selected: 24, qc_valid: 23, qc_rejected: 1, full_benchmark_selected: 6000,
     selected_before_heldout_scoring: true },
   source: { dataset: "STEAD", citation: "Stanford Earthquake Dataset", authors: "Mousavi et al.",
-    doi: "10.1109/ACCESS.2019.2947848", license: "CC BY 4.0", license_url: "https://example.org/license",
-    original_url: "https://example.org/source", mirror_url: "https://example.org/mirror", modification: "ENZ normalized" },
+    doi: "10.1109/ACCESS.2019.2947848", license: "CC BY 4.0",
+    license_url: "https://github.com/smousavi05/STEAD/blob/e6f247cf174e4aaefe01a6fcc72a0e88296d42b4/LICENSE",
+    original_url: "https://example.org/source", mirror_url: "https://example.org/mirror", modification: "ENZ normalized",
+    redistribution: { decision: "approved-with-attribution", license: "CC BY 4.0",
+      license_url: "https://creativecommons.org/licenses/by/4.0/",
+      review: "docs/design/features/phase-picking/rights-review-2026-10-28.md",
+      attribution_file: "ATTRIBUTION.md", upstream_license_commit: "b".repeat(40),
+      upstream_license_blob_sha1: "c".repeat(40), upstream_license_sha256: hash,
+      seisbench_commit: "d".repeat(40), seisbench_stead_blob_sha1: "e".repeat(40), mirror_license_sha256: hash } },
   records: Array.from({ length: 24 }, (_, i) => i === 19 ? {
     trace_id: `trace-${i}`, status: "qc-rejected", category: "noise", network: "AV", station_id: "AV.ANNE",
     channel: "EH", analyst_p_s: null, analyst_s_s: null, reference_is_ground_truth: false,
@@ -60,7 +67,19 @@ describe("M13 browser input and frozen asset boundary", () => {
     expect(parseLocalTrace(normalized).input[0]).toBe(-1);
   });
 
-  it("rejects unsupported rate, component ambiguity, gaps and filled/flat channels", () => {
+  it("adversarial: rejects a declared normalized channel that does not have unit peak", () => {
+    const normalized = local();
+    normalized.representation = "normalized";
+    normalized.unit = "dimensionless";
+    normalized.channels = {
+      E: channel(0, 0.5),
+      N: channel(0, 1),
+      Z: channel(0, 0.75),
+    };
+    expect(() => parseLocalTrace(normalized)).toThrow(/unit absolute peak/);
+  });
+
+  it("adversarial: rejects unsupported rate, component ambiguity, gaps and filled/flat channels", () => {
     const wrongRate = local(); wrongRate.sample_rate_hz = 50;
     expect(() => parseLocalTrace(wrongRate)).toThrow(/100 Hz/);
     const gaps = local(); gaps.qc.gaps = true;
@@ -82,6 +101,29 @@ describe("M13 browser input and frozen asset boundary", () => {
     const changed = manifest();
     changed.records[19].waveform_file = "replacement.f32";
     expect(() => parsePhaseManifest(changed)).toThrow(/QC-failed/);
+  });
+
+  it("adversarial: rejects duplicate trace identities and waveform bytes added to a QC-rejected row", () => {
+    const duplicate = manifest();
+    duplicate.records[1].trace_id = duplicate.records[0].trace_id;
+    expect(() => parsePhaseManifest(duplicate)).toThrow(/Duplicate browser trace identity/);
+    const changed = manifest();
+    changed.records[19].waveform_file = "replacement.f32";
+    changed.records[19].waveform_sha256 = hash;
+    changed.records[19].waveform_bytes = 72000;
+    expect(() => parsePhaseManifest(changed)).toThrow(/QC-failed/);
+  });
+
+  it("rejects an unreviewed or malformed public asset rights declaration", () => {
+    const unreviewed = manifest();
+    unreviewed.source.redistribution.decision = "pending";
+    expect(() => parsePhaseManifest(unreviewed)).toThrow(/redistribution rights/);
+    const mutableLicense = manifest();
+    mutableLicense.source.license_url = "https://github.com/smousavi05/STEAD/blob/master/LICENSE";
+    expect(() => parsePhaseManifest(mutableLicense)).toThrow(/pinned to the reviewed license/);
+    const malformed = manifest();
+    malformed.source.redistribution.upstream_license_sha256 = "not-a-digest";
+    expect(() => parsePhaseManifest(malformed)).toThrow(/SHA-256/);
   });
 
   it("checks the sealed benchmark population and checkpoint before showing offline metrics", () => {
@@ -111,7 +153,7 @@ describe("M13 browser input and frozen asset boundary", () => {
     expect(() => parseNormalizedF32(bytes, parsePhaseManifest(manifest()).records[19])).toThrow(/QC-failed/);
   });
 
-  it("validates all raw output samples before global peaks and S abstention", () => {
+  it("adversarial: rejects invalid probability output before global peaks and S abstention", () => {
     const values = new Float32Array(18000);
     for (let i = 0; i < 6000; i++) values[i] = 1;
     values[100] = 0.1; values[6100] = 0.9;
@@ -124,5 +166,18 @@ describe("M13 browser input and frozen asset boundary", () => {
     expect(validateProbabilities(values, [1,3,6000]).picks).toEqual({ P: 100, S: 140 });
     values[400] = Number.NaN;
     expect(() => validateProbabilities(values, [1,3,6000])).toThrow(/Invalid N\/P\/S/);
+  });
+
+  it("adversarial: refuses a fetched model when its bytes differ from the manifest digest", async () => {
+    const bytes = new Uint8Array([1, 2, 3]);
+    const expected = await crypto.subtle.digest("SHA-256", new Uint8Array([4, 5, 6]));
+    const fetcher = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(bytes, { status: 200 }));
+    try {
+      await expect(verifiedFetch("/data/phase/stead/model.onnx", [...new Uint8Array(expected)]
+        .map(value => value.toString(16).padStart(2, "0")).join("")))
+        .rejects.toThrow("Asset SHA-256 differs from the reviewed manifest");
+    } finally {
+      fetcher.mockRestore();
+    }
   });
 });

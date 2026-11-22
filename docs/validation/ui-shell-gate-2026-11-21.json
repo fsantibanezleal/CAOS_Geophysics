@@ -1,0 +1,386 @@
+{
+  "ok": true,
+  "base": "http://127.0.0.1:63294/",
+  "expectBrand": "Inverse Earth Studio",
+  "sizes": "390x844,768x1024,1280x800,1600x900,2560x1440",
+  "themes": "light,dark",
+  "langs": "en,es",
+  "wideFontSizes": "390x844,1280x800",
+  "states": 1684,
+  "minima": {
+    "drawnShare": {
+      "value": 0.6006,
+      "route": "/app",
+      "mode": "1280x800 light es wide-font",
+      "trail": "case LEARNED_AUTOENCODER"
+    },
+    "stageFill": {
+      "value": 0.4814,
+      "route": "/app",
+      "mode": "1280x800 light en",
+      "trail": "case LEARNED_CNN > analysis > recovery"
+    }
+  },
+  "waivers": [],
+  "docWalks": [
+    {
+      "route": "/introduction",
+      "lang": "en",
+      "trail": "",
+      "samples": 20,
+      "budgetSamples": 120,
+      "ms": 3830,
+      "budgetMs": 90000
+    },
+    {
+      "route": "/introduction",
+      "lang": "en",
+      "trail": "executive > context",
+      "samples": 4,
+      "budgetSamples": 104,
+      "ms": 97,
+      "budgetMs": 82000
+    },
+    {
+      "route": "/introduction",
+      "lang": "en",
+      "trail": "executive > situation",
+      "samples": 35,
+      "budgetSamples": 135,
+      "ms": 7248,
+      "budgetMs": 97500
+    },
+    {
+      "route": "/introduction",
+      "lang": "en",
+      "trail": "executive > trends",
+      "samples": 3,
+      "budgetSamples": 103,
+      "ms": 81,
+      "budgetMs": 81500
+    },
+    {
+      "route": "/introduction",
+      "lang": "en",
+      "trail": "executive > proposal",
+      "samples": 30,
+      "budgetSamples": 130,
+      "ms": 5229,
+      "budgetMs": 95000
+    },
+    {
+      "route": "/introduction",
+      "lang": "en",
+      "trail": "technical",
+      "samples": 15,
+      "budgetSamples": 115,
+      "ms": 1535,
+      "budgetMs": 87500
+    },
+    {
+      "route": "/introduction",
+      "lang": "es",
+      "trail": "",
+      "samples": 20,
+      "budgetSamples": 120,
+      "ms": 3801,
+      "budgetMs": 90000
+    },
+    {
+      "route": "/introduction",
+      "lang": "es",
+      "trail": "executive > context",
+      "samples": 4,
+      "budgetSamples": 104,
+      "ms": 108,
+      "budgetMs": 82000
+    },
+    {
+      "route": "/introduction",
+      "lang": "es",
+      "trail": "executive > situation",
+      "samples": 35,
+      "budgetSamples": 135,
+      "ms": 7313,
+      "budgetMs": 97500
+    },
+    {
+      "route": "/introduction",
+      "lang": "es",
+      "trail": "executive > trends",
+      "samples": 3,
+      "budgetSamples": 103,
+      "ms": 99,
+      "budgetMs": 81500
+    },
+    {
+      "route": "/introduction",
+      "lang": "es",
+      "trail": "executive > proposal",
+      "samples": 30,
+      "budgetSamples": 130,
+      "ms": 5198,
+      "budgetMs": 95000
+    },
+    {
+      "route": "/introduction",
+      "lang": "es",
+      "trail": "technical",
+      "samples": 15,
+      "budgetSamples": 115,
+      "ms": 1536,
+      "budgetMs": 87500
+    }
+  ],
+  "storyContexts": [
+    {
+      "mode": "1280x800 light en story",
+      "routes": 3
+    },
+    {
+      "mode": "390x844 light en story",
+      "routes": 3
+    },
+    {
+      "mode": "390x844 light es story",
+      "routes": 3
+    },
+    {
+      "mode": "390x844 dark en story",
+      "routes": 3
+    },
+    {
+      "mode": "390x844 dark es story",
+      "routes": 3
+    },
+    {
+      "mode": "768x1024 light en story",
+      "routes": 3
+    },
+    {
+      "mode": "768x1024 light es story",
+      "routes": 3
+    },
+    {
+      "mode": "768x1024 dark en story",
+      "routes": 3
+    },
+    {
+      "mode": "768x1024 dark es story",
+      "routes": 3
+    },
+    {
+      "mode": "1280x800 light es story",
+      "routes": 3
+    },
+    {
+      "mode": "1280x800 dark en story",
+      "routes": 3
+    },
+    {
+      "mode": "1280x800 dark es story",
+      "routes": 3
+    },
+    {
+      "mode": "1600x900 light en story",
+      "routes": 3
+    },
+    {
+      "mode": "1600x900 light es story",
+      "routes": 3
+    },
+    {
+      "mode": "1600x900 dark en story",
+      "routes": 3
+    },
+    {
+      "mode": "1600x900 dark es story",
+      "routes": 3
+    },
+    {
+      "mode": "2560x1440 light en story",
+      "routes": 3
+    },
+    {
+      "mode": "2560x1440 light es story",
+      "routes": 3
+    },
+    {
+      "mode": "2560x1440 dark en story",
+      "routes": 3
+    },
+    {
+      "mode": "2560x1440 dark es story",
+      "routes": 3
+    }
+  ],
+  "checks": {},
+  "captures": 223,
+  "failures": [],
+  "artifactChecks": [
+    {
+      "path": "/data/v2/catalog.json",
+      "ok": true,
+      "first": "{",
+      "transportRetry": false
+    },
+    {
+      "path": "/data/v2/GRAVITY_INTRUSION/reference.json",
+      "ok": true,
+      "first": "{",
+      "transportRetry": false
+    },
+    {
+      "path": "/data/v2/LEARNED_AUTOENCODER/reference.json",
+      "ok": true,
+      "first": "{",
+      "transportRetry": false
+    },
+    {
+      "path": "/data/v2/edi/manifest.json",
+      "ok": true,
+      "first": "{",
+      "transportRetry": false
+    },
+    {
+      "path": "/data/v2/edi/calibration-halfspace.json",
+      "ok": true,
+      "first": "{",
+      "transportRetry": false
+    },
+    {
+      "path": "/data/v2/edi/calibration-two-layer.json",
+      "ok": true,
+      "first": "{",
+      "transportRetry": false
+    },
+    {
+      "path": "/data/v2/edi/halfspace-100-native.json",
+      "ok": true,
+      "first": "{",
+      "transportRetry": false
+    },
+    {
+      "path": "/data/v2/edi/clear-lake-cl061-screen.json",
+      "ok": true,
+      "first": "{",
+      "transportRetry": false
+    },
+    {
+      "path": "/data/field/long-valley/1982-06_to_1999-07.json",
+      "ok": true,
+      "first": "{",
+      "transportRetry": false
+    },
+    {
+      "path": "/data/field/amargosa/amargosa-m03-20261111.json",
+      "ok": true,
+      "first": "{",
+      "transportRetry": false
+    },
+    {
+      "path": "/data/v2/fwi-replay.json",
+      "ok": true,
+      "first": "{",
+      "transportRetry": false
+    },
+    {
+      "path": "/data/v2/GRAVITY_INTRUSION/contrast.json",
+      "ok": true,
+      "first": "{",
+      "transportRetry": false
+    },
+    {
+      "path": "/data/v2/GRAVITY_DEEP_BODY/reference.json",
+      "ok": true,
+      "first": "{",
+      "transportRetry": true,
+      "originalReadError": "Error: response.text: Protocol error (Network.getResponseBody): No data found for resource with given identifier\nResponse body is not available for a response that was navigated away from. Read response.body() before triggering any navigation."
+    },
+    {
+      "path": "/data/v2/GRAVITY_NOISY/reference.json",
+      "ok": true,
+      "first": "{",
+      "transportRetry": false
+    },
+    {
+      "path": "/data/v2/GRAVITY_TILTED/reference.json",
+      "ok": true,
+      "first": "{",
+      "transportRetry": false
+    },
+    {
+      "path": "/data/v2/MAGNETIC_DYKE/reference.json",
+      "ok": true,
+      "first": "{",
+      "transportRetry": true,
+      "originalReadError": "Error: response.text: Protocol error (Network.getResponseBody): No data found for resource with given identifier\nResponse body is not available for a response that was navigated away from. Read response.body() before triggering any navigation."
+    },
+    {
+      "path": "/data/v2/MAGNETIC_REMANENCE/reference.json",
+      "ok": true,
+      "first": "{",
+      "transportRetry": true,
+      "originalReadError": "Error: response.text: Protocol error (Network.getResponseBody): No data found for resource with given identifier\nResponse body is not available for a response that was navigated away from. Read response.body() before triggering any navigation."
+    },
+    {
+      "path": "/data/v2/MAGNETIC_DEEP/reference.json",
+      "ok": true,
+      "first": "{",
+      "transportRetry": true,
+      "originalReadError": "Error: response.text: Protocol error (Network.getResponseBody): No data found for resource with given identifier\nResponse body is not available for a response that was navigated away from. Read response.body() before triggering any navigation."
+    },
+    {
+      "path": "/data/v2/MAGNETIC_NOISY/reference.json",
+      "ok": true,
+      "first": "{",
+      "transportRetry": true,
+      "originalReadError": "Error: response.text: Protocol error (Network.getResponseBody): No data found for resource with given identifier\nResponse body is not available for a response that was navigated away from. Read response.body() before triggering any navigation."
+    },
+    {
+      "path": "/data/v2/MT_RESISTIVE/reference.json",
+      "ok": true,
+      "first": "{",
+      "transportRetry": true,
+      "originalReadError": "Error: response.text: Protocol error (Network.getResponseBody): No data found for resource with given identifier\nResponse body is not available for a response that was navigated away from. Read response.body() before triggering any navigation."
+    },
+    {
+      "path": "/data/v2/MT_CONDUCTIVE/reference.json",
+      "ok": true,
+      "first": "{",
+      "transportRetry": false
+    },
+    {
+      "path": "/data/v2/MT_MIXED/reference.json",
+      "ok": true,
+      "first": "{",
+      "transportRetry": false
+    },
+    {
+      "path": "/data/v2/MT_NOISY/reference.json",
+      "ok": true,
+      "first": "{",
+      "transportRetry": false
+    },
+    {
+      "path": "/data/v2/JOINT_SHARED/reference.json",
+      "ok": true,
+      "first": "{",
+      "transportRetry": true,
+      "originalReadError": "Error: response.text: Protocol error (Network.getResponseBody): No data found for resource with given identifier\nResponse body is not available for a response that was navigated away from. Read response.body() before triggering any navigation."
+    },
+    {
+      "path": "/data/v2/JOINT_CONFLICT/reference.json",
+      "ok": true,
+      "first": "{",
+      "transportRetry": true,
+      "originalReadError": "Error: response.text: Protocol error (Network.getResponseBody): No data found for resource with given identifier\nResponse body is not available for a response that was navigated away from. Read response.body() before triggering any navigation."
+    },
+    {
+      "path": "/data/v2/LEARNED_CNN/reference.json",
+      "ok": true,
+      "first": "{",
+      "transportRetry": false
+    }
+  ]
+}

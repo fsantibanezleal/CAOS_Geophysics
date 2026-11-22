@@ -1,0 +1,93 @@
+{
+  "schema": "caos.declared-artifacts-index/v1",
+  "files": [
+    "v2/catalog.json",
+    "v2/fwi-replay.json",
+    "v2/migration.json",
+    "v2/models/autoencoder.json",
+    "v2/models/cnn.json",
+    "v2/models/training.json"
+  ],
+  "cases": [
+    {
+      "case_id": "GRAVITY_INTRUSION",
+      "manifest_path": "manifests/v2-gravity_intrusion.json"
+    },
+    {
+      "case_id": "GRAVITY_DEEP_BODY",
+      "manifest_path": "manifests/v2-gravity_deep_body.json"
+    },
+    {
+      "case_id": "GRAVITY_NOISY",
+      "manifest_path": "manifests/v2-gravity_noisy.json"
+    },
+    {
+      "case_id": "GRAVITY_TILTED",
+      "manifest_path": "manifests/v2-gravity_tilted.json"
+    },
+    {
+      "case_id": "MAGNETIC_DYKE",
+      "manifest_path": "manifests/v2-magnetic_dyke.json"
+    },
+    {
+      "case_id": "MAGNETIC_REMANENCE",
+      "manifest_path": "manifests/v2-magnetic_remanence.json"
+    },
+    {
+      "case_id": "MAGNETIC_DEEP",
+      "manifest_path": "manifests/v2-magnetic_deep.json"
+    },
+    {
+      "case_id": "MAGNETIC_NOISY",
+      "manifest_path": "manifests/v2-magnetic_noisy.json"
+    },
+    {
+      "case_id": "MT_RESISTIVE",
+      "manifest_path": "manifests/v2-mt_resistive.json"
+    },
+    {
+      "case_id": "MT_CONDUCTIVE",
+      "manifest_path": "manifests/v2-mt_conductive.json"
+    },
+    {
+      "case_id": "MT_MIXED",
+      "manifest_path": "manifests/v2-mt_mixed.json"
+    },
+    {
+      "case_id": "MT_NOISY",
+      "manifest_path": "manifests/v2-mt_noisy.json"
+    },
+    {
+      "case_id": "FWI_LAYERED",
+      "manifest_path": "manifests/v2-fwi_layered.json"
+    },
+    {
+      "case_id": "FWI_FAULT",
+      "manifest_path": "manifests/v2-fwi_fault.json"
+    },
+    {
+      "case_id": "FWI_CYCLE_SKIP",
+      "manifest_path": "manifests/v2-fwi_cycle_skip.json"
+    },
+    {
+      "case_id": "FWI_NOISY",
+      "manifest_path": "manifests/v2-fwi_noisy.json"
+    },
+    {
+      "case_id": "JOINT_SHARED",
+      "manifest_path": "manifests/v2-joint_shared.json"
+    },
+    {
+      "case_id": "JOINT_CONFLICT",
+      "manifest_path": "manifests/v2-joint_conflict.json"
+    },
+    {
+      "case_id": "LEARNED_CNN",
+      "manifest_path": "manifests/v2-learned_cnn.json"
+    },
+    {
+      "case_id": "LEARNED_AUTOENCODER",
+      "manifest_path": "manifests/v2-learned_autoencoder.json"
+    }
+  ]
+}

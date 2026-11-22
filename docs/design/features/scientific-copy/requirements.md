@@ -13,6 +13,6 @@ R-C04 THE product CSS SHALL inherit shared-shell palette, typography, page primi
 
 R-C05 THE corrected site SHALL preserve working scientific controls and validate regenerated numerical artifacts. Gate: artifact check, existing frontend tests, build and six-family interaction checks.
 
-R-C06 THE release SHALL publish identical validated content on both existing public hosts. Gate: develop/main integration builds, Pages deployment, VPS deployment and external route/data verification.
+R-C06 THE release SHALL publish validated content from exactly one canonical application origin: `https://geophysics.ml.fasl-work.com/` on the ML VPS. GitHub Pages publication and any second application origin SHALL remain disabled. Gate: current VPS catalog/artifact verification, direct-route and browser acceptance, and single-origin repository checks.
 
 R-C07 THE numerical cases SHALL use a refined spatial discretization and expose its resolution without equating grid refinement to geological resolving power. Gate: refinement forward-model check, numerical suite, complete regenerated case matrix and mesh/section browser checks. Added after explicit user rejection of low-resolution block geometry.

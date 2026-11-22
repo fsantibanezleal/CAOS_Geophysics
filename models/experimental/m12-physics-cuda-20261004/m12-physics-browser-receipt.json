@@ -1,0 +1,97 @@
+{
+  "schema": "geophysics.m12-browser-model/v1",
+  "status": "parity-verified",
+  "model": {
+    "file": "m12-physics.onnx",
+    "bytes": 137305,
+    "sha256": "92e5a3cc5bc70d81c122a1d64c2b4bd722eed47cfa55e2f2473f755cf499f261"
+  },
+  "checkpoint": {
+    "file": "models/experimental/m12-physics-cuda-20261004/m12-physics.npz",
+    "sha256": "23d51c42b079f37c85fe77796556962e9b7f4f2fe179650a329641a6faa9ded1"
+  },
+  "training": {
+    "receipt_sha256": "d2d40acd5ce4bda7de54938c0ed50b21e0fd2666b84e6868f1b89adc4c22efa1",
+    "source_sha256": "99f1b079774709143debf0702059108acb7a6d18f3364404f791124053b5a460",
+    "operator_source_sha256": "2b9ed95d3ba7b1b0f9f80167fa610640dc75c8a142dafb9f7f09791b96a1fd44",
+    "status": "failed-held-out-comparator",
+    "protocol": "m12-physics/v2",
+    "scientific_verdict": "failed-held-out-comparator",
+    "selection": "frozen-checkpoint; no retraining or reselection during export"
+  },
+  "runtime": {
+    "exporter": "PyTorch TorchScript ONNX exporter",
+    "pytorch": "2.14.0+cu126",
+    "onnx": "1.23.0",
+    "onnxruntime": "1.30.0",
+    "opset": 18,
+    "input": {
+      "name": "features",
+      "dtype": "float32",
+      "shape": [
+        "batch",
+        2,
+        16,
+        16
+      ]
+    },
+    "output": {
+      "name": "velocity_m_s",
+      "dtype": "float32",
+      "shape": [
+        "batch",
+        16,
+        16
+      ]
+    },
+    "browser_execution_provider": "wasm",
+    "device_used_for_parity": "CPUExecutionProvider",
+    "python": "3.12.10"
+  },
+  "parity": {
+    "records": 640,
+    "cohorts": {
+      "validation": {
+        "records": 160,
+        "max_absolute_error_m_s": 0.00048828125,
+        "rmse_of_export_difference_m_s": 0.00012408618931658566,
+        "input_manifest_sha256": "1f053c25d4edf525042e0c033b4c07c4efee71548568539e5c251a8d2cf59d46"
+      },
+      "id_test": {
+        "records": 160,
+        "max_absolute_error_m_s": 0.00048828125,
+        "rmse_of_export_difference_m_s": 0.00012414480443112552,
+        "input_manifest_sha256": "60ddec165d5edc598e04647ac4035cce1ab111cd2813a8204fecbee5d23b91e1"
+      },
+      "family_only": {
+        "records": 80,
+        "max_absolute_error_m_s": 0.00048828125,
+        "rmse_of_export_difference_m_s": 0.00012420340499375015,
+        "input_manifest_sha256": "7384666220093c86c423037c6ba960c5568e3fbb8762e362ddd6c302d0ea5efd"
+      },
+      "acquisition_only": {
+        "records": 80,
+        "max_absolute_error_m_s": 0.00048828125,
+        "rmse_of_export_difference_m_s": 0.00012365150905679911,
+        "input_manifest_sha256": "aa6b993a75f5849aeb030459f2866a924ff46e60691b93922f6172a9452ad6b8"
+      },
+      "joint_ood": {
+        "records": 160,
+        "max_absolute_error_m_s": 0.00048828125,
+        "rmse_of_export_difference_m_s": 0.00012321678514126688,
+        "input_manifest_sha256": "5fca68e9d78989cbaba440f73224fec680accfcac279261f40f87c4ad35f96ff"
+      }
+    },
+    "max_absolute_error_m_s": 0.00048828125,
+    "acceptance_tolerance_m_s": 0.002,
+    "passed": true,
+    "training_and_test_inputs": "reconstructed from frozen disjoint manifests; metrics were not used for selection"
+  },
+  "limitations": [
+    "Synthetic training only; no field accuracy or generalization claim.",
+    "The original held-out joint comparator failed; the CNN is exposed only as an exploratory alternative.",
+    "Fixed local 800 m by 800 m domain and 16 by 16 grid; straight-ray input features.",
+    "Unsupported cells remain prior-dominated network output and are marked by a separate support mask.",
+    "ONNX parity certifies format conversion only, not physical correctness or scientific acceptance."
+  ]
+}

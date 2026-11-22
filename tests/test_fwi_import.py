@@ -27,7 +27,8 @@ def write(path, value):
 
 @pytest.mark.parametrize('container,producer', [
     ('0.04.000', '0.04.000'), ('0.04.001', '0.04.000'), ('0.04.001', '0.04.001'),
-    ('0.04.002', '0.04.000'), ('0.04.002', '0.04.001'), ('0.04.002', '0.04.002')])
+    ('0.04.002', '0.04.000'), ('0.04.002', '0.04.001'), ('0.04.002', '0.04.002'),
+    ('0.04.003', '0.04.002'), ('0.04.003', '0.04.003')])
 def test_explicit_version_reuse_requires_actual_version_specific_source(container, producer):
     prior = dict(version=producer, generator_fingerprint=generator_fingerprint('seismic', version=producer))
     gate.assert_run_provenance('seismic', prior, container)
@@ -36,8 +37,9 @@ def test_explicit_version_reuse_requires_actual_version_specific_source(containe
         gate.assert_run_provenance('seismic', prior, container)
 
 
-@pytest.mark.parametrize('container,producer', [('0.04.003', '0.04.003'), ('0.04.002', 'oldmain'),
-                                              ('0.04.001', '0.04.002'), ('0.04.002', '0.04.003')])
+@pytest.mark.parametrize('container,producer', [('0.04.004', '0.04.004'), ('0.04.002', 'oldmain'),
+                                              ('0.04.001', '0.04.002'), ('0.04.002', '0.04.003'),
+                                              ('0.04.003', '0.04.004')])
 def test_unreviewed_version_is_not_accepted_even_if_matching(container, producer):
     with pytest.raises(AssertionError):
         versions.allowed_run_version(container, producer)
