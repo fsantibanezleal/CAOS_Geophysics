@@ -32,7 +32,7 @@ def test_ledger_contract_and_rights():
     assert set(records) == {"simpeg-gravity", "simpeg-magnetics", "original-synthetic",
                             "clear-lake-cl061", "auslamp-nsw-c15", "pygimli-slagdump", "pygimli-koenigsee",
                             "stead-metadata", "bartlett-fgdc", "clear-lake-author-potentials-v2",
-                            "usgs-amargosa-aeromagnetic"}
+                            "usgs-amargosa-aeromagnetic", "sparc-northern-palmer-magnetic"}
     assert {record["rights_decision"] for record in records.values()} <= {
         "mirror", "provider-link-only", "derivative-only", "forbidden"}
     assert all(record["raw_path"].startswith("data/downloads/") for record in records.values()
@@ -54,6 +54,16 @@ def test_amargosa_source_contract_is_pinned_and_attributed():
     assert source["rights_decision"] == "mirror"
     assert "public domain" in source["rights_statement"]
     assert "subsurface truth" in source["use"]
+
+
+def test_sparc_source_contract_is_pinned_and_attributed():
+    source = load_ledger()["sparc-northern-palmer-magnetic"]
+    assert source["format"] == "bas-sparc-xyz" and source["acquisition"] == "fetch"
+    assert source["expected_bytes"] == 69_305_816
+    assert source["sha256"] == "db63cf49dada843676429376f1991f2531c37eab8007f1da2feeb22b3b7943f8"
+    assert source["rights_decision"] == "mirror"
+    assert "Open Government Licence v3" in source["rights_statement"]
+    assert "MagML excludes tie lines" in source["use"]
 
 
 def test_immutable_raw_asset_and_receipt(tmp_path):

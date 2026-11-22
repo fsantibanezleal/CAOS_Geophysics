@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import heapq
 import os
 from dataclasses import dataclass
 from hashlib import sha256
@@ -247,7 +248,8 @@ def _line_geometry(points: list[Observation]) -> dict:
             "flight_line_normal_xy": [float(value) for value in normal]}
 
 
-def _line_segments(points: list[Observation]) -> dict[tuple[str, str], list[tuple[np.ndarray, np.ndarray, float, float]]]:
+def _line_segments(points: list[Observation]) -> dict[
+        tuple[str, str], list[tuple[np.ndarray, np.ndarray, float, float, float, float]]]:
     """Build acquisition-order segments for each flight or tie line."""
     grouped: dict[tuple[str, str], list[Observation]] = {}
     for point in points:
@@ -260,7 +262,8 @@ def _line_segments(points: list[Observation]) -> dict[tuple[str, str], list[tupl
             a = np.asarray([left.easting_m, left.northing_m], dtype=np.float64)
             b = np.asarray([right.easting_m, right.northing_m], dtype=np.float64)
             if not np.array_equal(a, b):
-                segments.append((a, b, left.value, right.value))
+                segments.append((a, b, left.value, right.value,
+                                 left.sensor_height_m, right.sensor_height_m))
         result[key] = segments
     return result
 
@@ -286,40 +289,73 @@ def _segment_intersection(a: np.ndarray, b: np.ndarray, c: np.ndarray, d: np.nda
 
 
 def _crossover_interpolation(points: list[Observation]) -> dict:
-    """Compute line-to-line residual diagnostics at geometrical segment crossings."""
+    """Compute exact line crossings after a bounded XY-envelope sweep.
+
+    The resource limit counts opposite-role segment pairs whose axis-aligned
+    envelopes overlap in both coordinates. Pairs outside those envelopes
+    cannot intersect and are excluded before the exact segment predicate.
+    """
     lines = _line_segments(points)
-    ordered = sorted(lines)
-    pairs = [(left, right) for i, left in enumerate(ordered) for right in ordered[i + 1:]
-             if left[0] != right[0]]
-    tests = sum(len(lines[left]) * len(lines[right]) for left, right in pairs)
-    if tests > MAX_CROSSOVER_SEGMENT_TESTS:
-        raise MagneticProcessingError(
-            f"crossover QC requires {tests} segment comparisons; bound is {MAX_CROSSOVER_SEGMENT_TESTS}"
-        )
+    segments = []
+    serial = 0
+    for key in sorted(lines):
+        for a, b, va, vb, ha, hb in lines[key]:
+            segments.append((min(a[0], b[0]), max(a[0], b[0]),
+                             min(a[1], b[1]), max(a[1], b[1]),
+                             key, serial, a, b, va, vb, ha, hb))
+            serial += 1
+    segments.sort(key=lambda item: (item[0], item[1], item[4], item[5]))
+
+    active = {}
+    expiry = []
     crossings = {}
-    for left_key, right_key in pairs:
-        for a, b, va, vb in lines[left_key]:
-            for c, d, vc, vd in lines[right_key]:
-                if (max(a[0], b[0]) < min(c[0], d[0]) or max(c[0], d[0]) < min(a[0], b[0])
-                        or max(a[1], b[1]) < min(c[1], d[1]) or max(c[1], d[1]) < min(a[1], b[1])):
-                    continue
-                hit = _segment_intersection(a, b, c, d)
-                if hit is None:
-                    continue
-                xy, t, u = hit
-                key = (left_key, right_key, float(xy[0]), float(xy[1]))
-                crossings.setdefault(key, (xy, va + t * (vb - va), vc + u * (vd - vc)))
-    differences = [left - right for _, left, right in crossings.values()]
+    tests = 0
+    for current in segments:
+        xmin, xmax, ymin, ymax, current_key, serial, a, b, va, vb, ha, hb = current
+        while expiry and expiry[0][0] < xmin:
+            _, expired = heapq.heappop(expiry)
+            active.pop(expired, None)
+        for other in active.values():
+            other_key = other[4]
+            if current_key[0] == other_key[0] or ymax < other[2] or other[3] < ymin:
+                continue
+            tests += 1
+            if tests > MAX_CROSSOVER_SEGMENT_TESTS:
+                raise MagneticProcessingError(
+                    "crossover QC exceeds the "
+                    f"{MAX_CROSSOVER_SEGMENT_TESTS} envelope-overlapping segment-pair bound"
+                )
+            hit = _segment_intersection(other[6], other[7], a, b)
+            if hit is None:
+                continue
+            xy, fraction_other, fraction_current = hit
+            left_key, right_key = sorted((other_key, current_key))
+            value_other = other[8] + fraction_other * (other[9] - other[8])
+            value_current = va + fraction_current * (vb - va)
+            height_other = other[10] + fraction_other * (other[11] - other[10])
+            height_current = ha + fraction_current * (hb - ha)
+            left_value, right_value = ((value_other, value_current) if left_key == other_key
+                                       else (value_current, value_other))
+            left_height, right_height = ((height_other, height_current) if left_key == other_key
+                                         else (height_current, height_other))
+            key = (left_key, right_key, float(xy[0]), float(xy[1]))
+            crossings.setdefault(key, (xy, left_value, right_value, left_height, right_height))
+        active[serial] = current
+        heapq.heappush(expiry, (xmax, serial))
+    differences = [left - right for _, left, right, _, _ in crossings.values()]
     return {
         "intersection_count": len(crossings), "segment_pair_tests": tests,
+        "segment_pair_test_definition": "opposite-role pairs with overlapping XY bounding boxes",
         "mean_signed_difference": float(np.mean(differences)) if differences else None,
         "mae": float(np.mean(np.abs(differences))) if differences else None,
         "rmse": float(np.sqrt(np.mean(np.square(differences)))) if differences else None,
         "crossings": [{"line_a": key[0][1], "role_a": key[0][0], "line_b": key[1][1],
                        "role_b": key[1][0], "easting_m": float(xy[0]), "northing_m": float(xy[1]),
                        "value_a": float(left), "value_b": float(right),
+                       "sensor_height_a_m": float(height_a), "sensor_height_b_m": float(height_b),
+                       "sensor_height_difference_a_minus_b_m": float(height_a - height_b),
                        "difference_a_minus_b": float(left - right)}
-                      for key, (xy, left, right) in sorted(crossings.items())],
+                      for key, (xy, left, right, height_a, height_b) in sorted(crossings.items())],
         "interpretation": "segment-linear crossover QC only; no leveling or correction applied",
     }
 

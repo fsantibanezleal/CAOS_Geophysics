@@ -4,7 +4,7 @@ This local workflow performs source-aware line and sensor-height QC, computes ge
 
 ## 1. Prepare the source and mapping
 
-Keep the original CSV unchanged. Record its citation, usage rights, provider-declared processing state, magnetic quantity and unit. The code does not infer whether a value is total field, anomaly, a horizontal derivative, or already levelled. Use projected coordinates in metres with a named projected CRS; angular longitude/latitude is rejected. Declare whether sensor height is above-ground or referenced to a vertical datum.
+Keep the original CSV unchanged. Record its citation, usage rights, provider-declared processing state, magnetic quantity and unit. The code does not infer whether a value is total field, anomaly, a horizontal derivative, or already levelled. Use projected coordinates in metres with a named projected CRS; angular longitude/latitude is rejected. Declare the height reference exactly: above ground, a named vertical datum, or geodetic altitude such as WGS 84 ellipsoidal altitude. Do not relabel geodetic aircraft altitude as height above ground.
 
 Create a JSON config using the exact headers in the CSV:
 
@@ -56,7 +56,7 @@ The CLI refuses to overwrite an existing result. It prints the output byte count
 
 ## 3. Read the result correctly
 
-`geometry_qc.lines` contains line counts, extents and sensor-height minimum/median/maximum/MAD plus outlier row indices. The outlier rule is six scaled MAD; it is a screening flag, not calibrated instrument uncertainty. No row is removed. `crossover_interpolation_qc` reports segment intersections, linear values interpolated independently along each crossing line, signed line-A-minus-line-B residuals and MAE/RMSE. Collinear overlaps are excluded because they do not define a unique point crossing. This is a diagnostic only; it does not estimate correction parameters or level the tie lines. Exact coincident samples remain separately reported.
+`geometry_qc.lines` contains line counts, extents and sensor-height minimum/median/maximum/MAD plus outlier row indices. The outlier rule is six scaled MAD; it is a screening flag, not calibrated instrument uncertainty. No row is removed. `crossover_interpolation_qc` reports segment intersections, linear values interpolated independently along each crossing line, signed line-A-minus-line-B residuals and MAE/RMSE. Each crossing retains the interpolated sensor heights and their difference; the result view plots height difference against magnetic difference and exposes exact values in point details. An x-sweep first prunes pairs with disjoint XY bounding boxes; every remaining candidate is evaluated by the exact segment predicate. `segment_pair_tests` counts those envelope-overlapping, opposite-role pairs and is capped at two million. Collinear overlaps are excluded because they do not define a unique point crossing. This diagnostic does not estimate correction parameters or level tie lines. Exact coincident samples remain separately reported.
 
 `split` lists complete fit and held-out flight-line IDs. A contiguous interior line block is selected deterministically along the estimated line-normal direction. Tie lines are excluded from fitting. `heldout_interpolation` reports supported sample count, coverage, MAE and RMSE. `grid` stores axes in metres, values, a `[northing, easting]` array shape, and a support mask. Values outside the training convex hull are encoded as zero only where the mask is false.
 

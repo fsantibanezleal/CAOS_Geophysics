@@ -205,6 +205,25 @@
       }
     },
     {
+      "source_id": "sparc-northern-palmer-magnetic",
+      "name": "BAS SPARC Northern Palmer Land processed aeromagnetic XYZ",
+      "provider": "British Antarctic Survey / UK Polar Data Centre",
+      "provider_url": "https://data.bas.ac.uk/full-record.php?id=GB/NERC/BAS/PDC/01358",
+      "object_url": "https://ramadda.data.bas.ac.uk/repository/entry/get?entryid=synth%3A5c87409e-fdfd-4732-ad19-9d319a0e5a2b%3AL1NQQVJDX01hZy5YWVo%3D",
+      "acquisition": "fetch",
+      "format": "bas-sparc-xyz",
+      "quantity": "provider-processed magnetic channels from raw total field through statistically levelled and microlevelled data",
+      "value_unit": "nT; projected coordinates and reported ellipsoidal altitude in metres",
+      "coordinate_convention": "BAS metadata Polar stereographic; preserve official parameter values verbatim and do not infer an EPSG code",
+      "expected_bytes": 69305816,
+      "sha256": "db63cf49dada843676429376f1991f2531c37eab8007f1da2feeb22b3b7943f8",
+      "raw_path": "data/downloads/bas-sparc/SPARC_Mag.XYZ",
+      "rights_decision": "mirror",
+      "rights_statement": "UK Open Government Licence v3; cite Ferraccioli and Jones (2020), follow NERC data policy and preserve the provider's no-warranty notice.",
+      "citation": "Ferraccioli, F., & Jones, P. C. (2020). Processed line aeromagnetic data over Northern Palmer Land, Antarctic Peninsula (2002/03 season) (Version 1.0) [Data set]. UK Polar Data Centre, NERC, UKRI. https://doi.org/10.5285/5c87409e-fdfd-4732-ad19-9d319a0e5a2b",
+      "use": "Measured processed line data for source-aware M03 geometry, height, crossover and blocked-line interpolation QC; MagML excludes tie lines. This is not raw acquisition, an independent reproduction of provider processing, geological truth or an accepted susceptibility inversion."
+    },
+    {
       "source_id": "usgs-amargosa-aeromagnetic",
       "name": "USGS Amargosa Desert aeromagnetic fixed-width XYZ",
       "provider": "United States Geological Survey",

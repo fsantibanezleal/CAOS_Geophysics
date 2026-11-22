@@ -66,6 +66,54 @@ processing/continuation suites pass 25 tests and Ruff passes. These are
 controlled synthetic parity and rejection checks. They do not demonstrate
 Charleston field-data parity or open hosted job admission.
 
+## 2026-11-21: bounded crossover sweep and BAS SPARC measured-line case
+
+The crossover implementation now sweeps segments sorted by their minimum
+easting. It expires segments whose x extent has passed, checks y-envelope
+overlap for opposite roles, and then calls the same exact segment predicate.
+The two-million limit remains; its unit is now the actual envelope-overlapping
+candidate pair rather than every possible cross-role Cartesian pair. Focused
+controls compare crossings and residuals, verify disjoint-pair pruning, and
+exercise the candidate limit. The full data-scale check below completed without
+raising that budget.
+
+The BAS SPARC PDC object was imported from the exact local bytes through the
+source ledger and reverified at 69,305,816 bytes and SHA-256
+`db63cf49dada843676429376f1991f2531c37eab8007f1da2feeb22b3b7943f8`. The
+source-specific parser retained all 209,370 numeric rows in an external
+inventory and produced M03 tables without modifying the input. Geometry-only
+axis classification found 69 profiles and 18 ties, cross-checked against the
+provider's `Line`, `Tie`, `Random` and `Special` markers. MagML had zero tie
+samples, matching the provider record.
+
+On MagL, M03 computed 648 crossings from 1,236 envelope-overlapping pairs; the
+interpolated crossover residuals were mean signed -0.824 nT, MAE 3.311 nT and
+RMSE 36.780 nT. At those intersections, the absolute sensor-height difference
+had median 36.63 m, p90 787.73 m and maximum 1,464.10 m. The absolute field
+difference had median 0.00716 nT, p95 1.516 nT and maximum 784.798 nT. The
+field mismatch therefore remains a descriptive geometric QC statistic: M03
+does not correct for height or infer a magnetic gradient, and the residual
+cannot be labelled a leveling error. The result view plots the paired quantities,
+shows its 98% central zoom and preserves exact values in point tooltips.
+
+A paired MagL/MagML blocked-line experiment used identical 66
+profiles and 14 held-out lines. Both runs scored 32,895 observations with
+32,872 supported (99.930%); RMSE was 223.900 nT for MagL and 223.979 nT for
+MagML. This is a single-survey spatial interpolation result, not a
+microlevelling evaluation or independent accuracy estimate. The provider's
+reported below-1-nT mean crossover error is after microlevelling and cannot be
+recomputed from MagML because tie values are absent. No magnetic inversion,
+geological truth, provider-grid reproduction or scientific acceptance is
+claimed. See the [source-specific dossier](../../../research/sparc-northern-palmer-magnetic.md)
+and the [BAS source record](https://data.bas.ac.uk/full-record.php?id=GB/NERC/BAS/PDC/01358).
+
+The run records, normalized tables and result JSON files remain under the
+configured external data root; none of the 69 MB source or 100 MB row inventory
+was added to Git. Exact input, code and result hashes are recorded in the
+external `case-receipt-v001.json` beside those JSON files. Source-specific field processing is still not sufficient for
+full M03 acceptance: provider-grid comparison, independent error evidence,
+measured-data continuation and integrated browser/project views remain open.
+
 ## Warm-worker and resource profile: 2026-10-27
 
 Successful browser-local jobs now reuse a serialized Pyodide/SciPy worker for

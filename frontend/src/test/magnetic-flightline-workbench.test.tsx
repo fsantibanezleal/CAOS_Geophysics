@@ -4,12 +4,26 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { ApiClient } from "../api/client";
 import { MagneticFlightlineApi } from "../api/magnetic-flightline";
 import { MagneticFlightlineWorkbench } from "../components/MagneticFlightlineWorkbench";
+import { CrossoverHeightEvidence } from "../components/CrossoverHeightEvidence";
 
 const project="11111111-1111-4111-8111-111111111111",asset="22222222-2222-4222-8222-222222222222",dataset="33333333-3333-4333-8333-333333333333";
 const sha="a".repeat(64);
 afterEach(()=>{vi.unstubAllGlobals();vi.restoreAllMocks();});
 
 describe("M03 flight-line user-data workbench",()=>{
+  it.each([false,true])("plots crossover residuals against sensor-height differences in locale (Spanish=%s)",es=>{
+    const html=renderToStaticMarkup(createElement(CrossoverHeightEvidence,{es,valueUnit:"uT",crossings:[
+      {line_a:"flight-1",line_b:"tie-1",easting_m:12,northing_m:34,sensor_height_difference_a_minus_b_m:120,difference_a_minus_b:0.25},
+      {line_a:"flight-2",line_b:"tie-2",easting_m:15,northing_m:38,sensor_height_difference_a_minus_b_m:-900,difference_a_minus_b:7.5},
+    ]}));
+    expect(html).toContain(es?"Diferencia de cruce frente a diferencia de altura":"Crossover difference versus sensor-height difference");
+    expect(html).toContain("Δz 120.00 m");expect(html).toContain("ΔB 0.25000 uT");expect(html).toContain("[uT]");
+    expect(html).toContain("ΔB &lt; 0");expect(html).toContain("ΔB &gt; 0");
+    expect(html).toContain('cx="648" cy="48"');expect(html).toContain('cx="88" cy="48"');
+    expect(html).not.toContain('cx="-');expect(html).not.toContain('cy="428"');
+    expect(html).toContain(es?"no estima ni aplica una corrección":"does not estimate or apply a levelling correction");
+  });
+
   it.each([false,true])("renders mapped CSV processing and honest method scope in locale (Spanish=%s)",es=>{
     vi.stubGlobal("window",{location:{origin:"https://geophysics.example"}});
     const html=renderToStaticMarkup(createElement(MagneticFlightlineWorkbench,{projectId:project,es}));
@@ -17,6 +31,8 @@ describe("M03 flight-line user-data workbench",()=>{
     expect(html).toContain(es?"Mapeo de columnas":"Column mapping");
     for(const column of ["easting","northing","value","line_id","line_role","sensor_height_m","sample_order"])expect(html).toContain(`placeholder="${column}"`);
     expect(html).toContain(es?"líneas completas retenidas":"held-out complete lines");
+    expect(html).toContain("geodetic-altitude-wgs84");
+    expect(html).toContain(es?"no sobre el terreno":"not above ground");
     expect(html).toContain(es?"No aplica correcciones magnéticas":"applies no magnetic corrections");
     expect(html).toContain(es?"La predicción retenida no equivale a precisión":"Held-out prediction is not model accuracy");
   });

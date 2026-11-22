@@ -242,9 +242,56 @@ flight/tie-line levelling corrections. Its rights and source hash are
 recorded in the research evidence; the calculation is a bounded
 processing/QC example, not independent site validation or a magnetic
 inversion. Upstream corrections cannot be reconstructed from absent
-instrument and processing records. A different provider dataset would
+instrument and processing records. Any additional provider dataset would
 need its own line geometry, units, leveling history, datum, and rights
 decision before being processed.
+
+A second provider case now exercises the parser and geometry checks on the
+British Antarctic Survey's SPARC Northern Palmer Land archive
+\cite{BASSPARC2020}. The archive spans 26 December 2002 to 20 January 2003
+and contains 209,370 numeric records in 21 whitespace-delimited fields. Its
+documented channel lineage includes compensated and corrected observations,
+statistically levelled MagL, and microlevelled MagML. The provider states that
+MagML excludes tie lines. The source-specific parser preserves every numeric
+row in an inventory, retains marker and source-record identifiers, and
+produces full MagL flight/tie data plus exactly paired MagL/MagML profile
+tables. Its two-axis geometry classification agrees with the explicit Line
+and Tie markers; Random and Special markers are retained and assigned by
+coordinate geometry. Published coordinate parameters are preserved verbatim;
+the ambiguous scale-factor field is not converted into an EPSG assertion.
+
+On full MagL, segment-linear interpolation identifies 648 flight/tie
+intersections from 1,236 opposite-role bounding-box candidates. The mean
+signed magnetic difference is -0.824 nT, the MAE is 3.311 nT and the RMSE is
+36.780 nT. Sensor heights at these intersections differ substantially: the
+median absolute difference is 36.63 m, the 90th percentile is 787.73 m and
+the maximum is 1,464.10 m. Because the pipeline applies no height correction
+or magnetic-gradient model, these residuals are not a tie-leveling error
+estimate. Crossing samples share lines and geometry, so a naive bootstrap
+over 648 crossings would not provide independent uncertainty; these values
+are descriptive for this survey block. The workbench plots paired height and
+field differences, keeps outlying values inspectable, and labels the view as
+QC rather than a correction.
+
+The paired-profile experiment uses identical 66 lines, 162,098 source rows,
+and 14 held-out lines for MagL and MagML. Both score 32,895 held-out rows and
+support 32,872 (99.930 percent). MagL has MAE 126.984 nT and RMSE 223.900 nT;
+MagML has MAE 126.498 nT and RMSE 223.979 nT. The 0.079 nT RMSE increase in
+MagML is not evidence of a processing benefit or harm: this is one spatial
+block, without independent magnetic truth, repeat surveys or a sampling model.
+These metrics measure interpolation between profiles, not field accuracy or
+subsurface recovery. The provider's reported sub-1-nT post-microlevelling
+crossover statistic cannot be reproduced from MagML because it has no tie
+observations. Exact source, parser, processor, input and result hashes are
+recorded in the external case receipt; the source bytes and full line tables
+remain outside Git. The generator and result table are reproducible with
+\url{manuscripts/inverse-earth-studio-report-0.04.003/build_sparc_case.py}
+and \texttt{GEOPHYSICS\_LOCAL\_DATA\_ROOT}. Table~\ref{tab:sparc-m03-measured}
+places the crossover diagnostic beside the two matched held-out interpolation
+results; their unlike sample populations must not be treated as a common
+accuracy ranking.
+
+\input{generated/sparc-m03-table.tex}
 
 The source implementation separates parsing, line selection, blocked
 holdout, support-aware gridding, continuation, and output provenance.

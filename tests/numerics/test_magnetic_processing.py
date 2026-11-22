@@ -107,6 +107,8 @@ def test_crossover_interpolation_reports_independent_tie_offset_without_applying
     assert diagnostic["intersection_count"] == 5
     assert diagnostic["mean_signed_difference"] == pytest.approx(-7.0)
     assert diagnostic["rmse"] == pytest.approx(7.0)
+    assert all(crossing["sensor_height_difference_a_minus_b_m"] == pytest.approx(1.0)
+               for crossing in diagnostic["crossings"])
     assert result["claims"]["corrections_applied"] == []
 
 
@@ -144,8 +146,23 @@ def test_crossover_work_is_rejected_above_declared_pair_budget(monkeypatch):
          "line": "T0", "role": "tie", "height": 120.0, "index": sample}
         for sample in range(9)
     )
-    with pytest.raises(MagneticProcessingError, match="segment comparisons; bound is 1"):
+    with pytest.raises(MagneticProcessingError, match="envelope-overlapping segment-pair bound"):
         process(data)
+
+
+def test_crossover_sweep_prunes_disjoint_segment_pairs_without_changing_intersections():
+    data = request()
+    data["rows"].extend(
+        {"E": float(sample * 50), "N": 50.0,
+         "field": 50000 + 0.3 * sample * 50 - 0.15 * 50,
+         "line": "T0", "role": "tie", "height": 120.0, "index": sample}
+        for sample in range(9)
+    )
+    result = process(data)
+    qc = result["geometry_qc"]["crossover_interpolation_qc"]
+    assert qc["intersection_count"] == 5
+    assert qc["segment_pair_test_definition"] == "opposite-role pairs with overlapping XY bounding boxes"
+    assert qc["segment_pair_tests"] < 320
 
 
 def test_grid_masks_points_outside_training_convex_hull():

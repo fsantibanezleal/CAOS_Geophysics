@@ -19,13 +19,13 @@ from urllib.request import HTTPRedirectHandler, Request, build_opener
 ROOT = Path(__file__).resolve().parents[1]
 LEDGER = ROOT / "data/source-ledger.json"
 FORMATS = {"simpeg-obs-tar-gz", "edi-transfer-function", "pygimli-ert-ohm", "research-zip", "fgdc-metadata-xml",
-           "usgs-amargosa-xyz-gz",
+           "usgs-amargosa-xyz-gz", "bas-sparc-xyz",
            "pygimli-traveltime-sgt", "stead-metadata-csv", "generated-case"}
 RIGHTS = {"mirror", "provider-link-only", "derivative-only", "forbidden"}
 FETCH_HOSTS = {"storage.googleapis.com", "raw.githubusercontent.com", "data.earthscope.org", "data.usgs.gov",
-               "pubs.usgs.gov", "zenodo.org"}
+               "pubs.usgs.gov", "ramadda.data.bas.ac.uk", "zenodo.org"}
 MIME = {"simpeg-obs-tar-gz": "application/gzip", "edi-transfer-function": "text/plain",
-        "usgs-amargosa-xyz-gz": "application/gzip",
+        "usgs-amargosa-xyz-gz": "application/gzip", "bas-sparc-xyz": "text/plain",
         "pygimli-ert-ohm": "text/plain", "pygimli-traveltime-sgt": "text/plain",
         "research-zip": "application/zip", "fgdc-metadata-xml": "application/xml"}
 MAX_SOURCE_BYTES = 200_000_000
@@ -243,6 +243,13 @@ def load_ledger(path: Path = LEDGER) -> dict[str, dict]:
                     or type(record.get("record_count")) is not int
                     or not 0 < record["record_count"] <= 500_000):
                 raise SourceError(f"{source_id}: fixed-width USGS XYZ needs a pinned expanded size, row count, units and CRS")
+        if record["format"] == "bas-sparc-xyz":
+            if (mode != "fetch" or record["rights_decision"] != "mirror"
+                    or record["expected_bytes"] != 69_305_816
+                    or record["sha256"] != "db63cf49dada843676429376f1991f2531c37eab8007f1da2feeb22b3b7943f8"
+                    or any(not isinstance(record.get(field), str) or not record[field].strip()
+                           for field in ("quantity", "value_unit", "coordinate_convention"))):
+                raise SourceError(f"{source_id}: BAS SPARC XYZ requires the reviewed object pin, attribution rights, units and CRS")
         if record["format"] == "research-zip":
             validate_archive_contract(record.get("archive_contract"))
         elif "archive_contract" in record:
