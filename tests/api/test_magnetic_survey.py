@@ -35,7 +35,8 @@ def test_owner_job_boundary_and_online_closed(make_harness):
         "field_validated": False,
         "online_admitted": False,
     }
-    assert "<closed-request-template.json>" in m04["local_recipe"]["commands"][0]
+    assert "GEOPHYSICS_LOCAL_DATA_ROOT" in m04["local_recipe"]["path_contract"]
+    assert "/absolute/path/closed-request-template.json" in m04["local_recipe"]["commands"][0]
     assert "calibrate" in m04["local_recipe"]["commands"][2]
 
     denied = harness.request(

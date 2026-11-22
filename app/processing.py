@@ -63,12 +63,17 @@ M04_LOCAL_RECIPE = {
         "unchanged original observation bytes",
         "a complete closed M04 request with explicit coordinates, units, field, mesh, bounds, prior and noise",
     ],
+    "path_contract": (
+        "Set GEOPHYSICS_LOCAL_DATA_ROOT to an absolute writable directory outside this repository. "
+        "Every input and output path in the commands must be replaced with an absolute path; "
+        "all output paths must remain below that data root."
+    ),
     "commands": [
-        "python data-pipeline/run_magnetic_survey.py prepare --template <closed-request-template.json> --original <original.csv> --output <request.json>",
-        "python data-pipeline/run_magnetic_survey.py validate --request <request.json> --original <original.csv> --output <geometry.json>",
-        "python data-pipeline/run_magnetic_survey.py calibrate --request <request.json> --original <original.csv> --output-dir <candidate-output>",
-        "python data-pipeline/run_magnetic_survey.py evaluate --request <request.json> --original <original.csv> --matrix-dir <candidate-output> --freeze <candidate-output/freeze.json>",
-        "python data-pipeline/run_magnetic_survey.py verify --request <request.json> --original <original.csv> --matrix-dir <candidate-output> --freeze <candidate-output/freeze.json>",
+        "python data-pipeline/run_magnetic_survey.py prepare --template /absolute/path/closed-request-template.json --original /absolute/path/original.csv --output /absolute/path/geophysics-data/candidate/request.json",
+        "python data-pipeline/run_magnetic_survey.py validate --request /absolute/path/geophysics-data/candidate/request.json --original /absolute/path/original.csv --output /absolute/path/geophysics-data/candidate/geometry.json",
+        "python data-pipeline/run_magnetic_survey.py calibrate --request /absolute/path/geophysics-data/candidate/request.json --original /absolute/path/original.csv --output-dir /absolute/path/geophysics-data/candidate/output",
+        "python data-pipeline/run_magnetic_survey.py evaluate --request /absolute/path/geophysics-data/candidate/request.json --original /absolute/path/original.csv --matrix-dir /absolute/path/geophysics-data/candidate/output --freeze /absolute/path/geophysics-data/candidate/output/freeze.json",
+        "python data-pipeline/run_magnetic_survey.py verify --request /absolute/path/geophysics-data/candidate/request.json --original /absolute/path/original.csv --matrix-dir /absolute/path/geophysics-data/candidate/output --freeze /absolute/path/geophysics-data/candidate/output/freeze.json",
     ],
     "acceptance": {
         "method_accepted": False,

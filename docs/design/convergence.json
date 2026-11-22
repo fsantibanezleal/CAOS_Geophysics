@@ -133,11 +133,11 @@
         },
         {
           "path": "app/processing.py",
-          "sha256": "61102d1de9f5554e063038e6758147213cff9a253184c6c5068022ee5412eeec"
+          "sha256": "fe860f7d100ea151b4646e1b7fd7dc90f018274dade66c83d22dd0925a240a69"
         },
         {
           "path": "tests/api/test_magnetic_survey.py",
-          "sha256": "09dd634525e106a432854e7355be2c9544d118fefe63dc2093804a86e8b0f777"
+          "sha256": "d0e3f332bf5f3cfd592f0473ae58ba5289ab441f430b1646f54f3946e7cb720d"
         },
         {
           "path": "tests/api/test_online_mt.py",
@@ -214,7 +214,7 @@
         },
         {
           "path": "app/processing.py",
-          "sha256": "61102d1de9f5554e063038e6758147213cff9a253184c6c5068022ee5412eeec"
+          "sha256": "fe860f7d100ea151b4646e1b7fd7dc90f018274dade66c83d22dd0925a240a69"
         },
         {
           "path": "app/gravity_l2_compute.py",
