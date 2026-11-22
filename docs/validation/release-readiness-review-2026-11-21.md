@@ -115,3 +115,21 @@ The current template SDD check found that the EDI feature mapped requirements to
 ## BS-1 acceptance wording correction
 
 The product SDD's BS-1 acceptance row now states the comparison boundary precisely: shared observations and case IDs, $Q$ as the data generator and scorer, $A$ for the residual features and reference inverse, and independent $Q$-based prediction scoring. The learned model still loses on the recorded cohorts, and this correction does not change scientific acceptance or release status.
+
+## Current-source shared-shell gate rerun
+
+The current frontend build passed the installed Shell 0.26.2 gate across 1,684
+measured states and 223 rendered captures. All five viewport sizes, both themes,
+both languages and the configured wide-font runs were measured; the report has
+zero failures and zero waivers. The minimum stage fill was 0.4814 and the
+minimum drawn share was 0.6006, both above the configured floors. The run walked
+20 story contexts and 12 documentation contexts. Five representative captures
+(phone and desktop App, Methodology, Implementation and the guided story) were
+visually inspected. The report is
+[`ui-shell-gate-2026-11-21.json`](ui-shell-gate-2026-11-21.json), SHA-256
+`75fc52541d4e37783d535f0f4e454eafdf32b93ef633070772da805f40e7f47c`.
+
+The product still imports Shell-owned styles and uses its theme/font tokens;
+its remaining CSS is scoped to domain plots and workbench sizing. No shared-base
+change was needed. This measured UI pass does not establish user aesthetic
+acceptance, scientific acceptance or release readiness.
