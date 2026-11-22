@@ -6,6 +6,21 @@ Reviewed the current geophysics task branch, the pinned CAOS App Shell and Produ
 
 The current product pins Shell 0.26.2 and records Product Template 0.15.014. Both shared repositories were fetched; their local and remote `develop`/`main` trees match and their worktrees are clean. No newer shared-base tree delta was available to adopt.
 
+## M04 supplied-byte consistency follow-up
+
+The local M04 command now admits a bounded normalized observation CSV and
+compares its ordered row IDs and finite decimal measurements with every
+observation in the closed request after checking the original byte count and
+SHA-256. This closes the earlier gap where a correct source digest could be
+paired with unrelated request observations. The adapter accepts original
+measurements only; transformed/corrected lineage and vendor formats remain
+outside its verified scope. Its regression test proves a hash-valid but
+value-mismatched request is rejected before export. The M04 input, geometry,
+bundle, candidate-matrix, refit and outer-evaluation suites pass 201 tests.
+R-407--R-411 and R-416--R-419 remain structurally incomplete; the method
+inventory is 10/20, and scientific/field acceptance remain false. This local
+workflow change does not satisfy release or host cutover gates.
+
 ## Implemented and checked in this review
 
 - Notebook execution now always uses a disposable, release-shaped copy. Compressed M13 ONNX bytes are decompressed only there after byte-count and SHA-256 verification, for both `--check` and output regeneration. This fixes normal replay against the source tree, where the published ONNX exists only compressed.

@@ -406,6 +406,23 @@ Exit0 means complete geometry validation/export only,2 invalid input/partition,
 provider original, so source.original_sha256 remains unverified raw provenance.
 It never advertises calibrate/evaluate. Those full tools remain R-414 scope.
 
+The separate `run_magnetic_survey.py` local workflow accepts a closed request
+plus a caller-owned observation CSV. The CSV is UTF-8 without BOM, uses LF line
+endings and a final LF, and has exactly `row_id,E_nT,N_nT,U_nT` for
+`secondary_enu_nT` or `row_id,value_nT` for either scalar quantity. It contains
+exactly one row per acquisition row, in the declared original order, with
+finite decimal values. Before planning or solver import, the workflow verifies
+the original-byte count and SHA-256, then compares every CSV row ID and numeric
+measurement to the closed request's observation array. Geometry, uncertainty,
+field, rights and processing metadata remain explicit request fields and are
+not inferred from this measurement table. Instrument-vendor formats, CRS
+conversion, correction inference and provider downloads are not supported by
+this adapter. The output directory must be within `GEOPHYSICS_LOCAL_DATA_ROOT`
+and outside the checkout; geometry exports and solver receipts are write-once.
+This establishes byte-to-likelihood consistency for the declared CSV
+interchange only. It does not establish correct field corrections, accepted
+optimizer binding, method acceptance, field validity or online admission.
+
 API adapter uses existing owner-scoped source/job IDs, not client-supplied owner.
 Submit a hash-bound config plus source ID; return existing queued/running/
 succeeded/failed/cancelled state with this method result reference. Until actual

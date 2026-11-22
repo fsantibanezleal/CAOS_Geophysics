@@ -13,7 +13,28 @@ freeze outside Git before any sealed outer evaluation. A failed fit is retained
 as a failed receipt; the command does not relax numerical/resource limits or
 claim field validation, method acceptance, or online admission.
 
+`run_magnetic_survey.py` accepts a closed request and an exact observation CSV
+under the format in the M04 [contracts](../docs/design/features/m04-survey-inversion/contracts.md).
+It compares all supplied row IDs and measurement values to the request before
+writing geometry or importing the numerical solver. Calibration/evaluation
+receipts live only below `GEOPHYSICS_LOCAL_DATA_ROOT`. These commands are local
+and CPU-bound; they do not download provider data, verify correction recipes,
+or confer scientific or field acceptance.
+
 ```powershell
+.venv-pipeline\Scripts\python.exe data-pipeline\run_magnetic_survey.py validate `
+  --request $request --original $observationCsv `
+  --output "$env:GEOPHYSICS_LOCAL_DATA_ROOT\research-runs\<run-id>\geometry.json"
+.venv-pipeline\Scripts\python.exe data-pipeline\run_magnetic_survey.py calibrate `
+  --request $request --original $observationCsv `
+  --output-dir "$env:GEOPHYSICS_LOCAL_DATA_ROOT\research-runs\<run-id>\m04"
+
+.venv-pipeline\Scripts\python.exe data-pipeline\run_magnetic_survey.py evaluate `
+  --request $request --original $observationCsv --matrix-dir $matrix --freeze $freeze
+
+.venv-pipeline\Scripts\python.exe data-pipeline\run_magnetic_survey.py verify `
+  --request $request --original $observationCsv --matrix-dir $matrix --freeze $freeze
+
 .venv-pipeline\Scripts\python.exe data-pipeline\magnetic_processing.py --input request.json --output m03-lines.json
 .venv-pipeline\Scripts\python.exe data-pipeline\magnetic_continuation.py --input m03-lines.json --output m03-upward-500m.json --height-m 500 --roi 20 180 30 210
 .venv-pipeline\Scripts\python.exe -m pytest tests\numerics\test_magnetic_processing.py tests\numerics\test_magnetic_continuation.py -q
