@@ -112,8 +112,8 @@ Gate: frontend/e2e/magnetic-survey.spec.ts::linked_physical_views.
 R-418 THE magnetic wiki and course SHALL explain actual L2/IRLS algorithms,
 source eligibility, worked local tools, negatives and limitations in EN/ES
 with real citations, shared fonts/tokens and both-theme figures.
-Integration: docs/methods/magnetic-survey and existing course content modules.
-Gate: scripts/check_magnetic_docs.py::main and frontend/e2e/magnetic-course.spec.ts.
+Integration: bilingual input wiki, English algorithm contract and bilingual course modules. The page states that fitting is not yet an executable user workflow.
+Gate: scripts/check_magnetic_docs.py::main and frontend/e2e/magnetic-theory.spec.ts.
 
 R-419 THE field evaluation SHALL retain source-rights, metadata, full-survey
 coverage and independently withheld predictive gates without fabricated geology.

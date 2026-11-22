@@ -17,8 +17,9 @@ measurements only; transformed/corrected lineage and vendor formats remain
 outside its verified scope. Its regression test proves a hash-valid but
 value-mismatched request is rejected before export. The M04 input, geometry,
 bundle, candidate-matrix, refit and outer-evaluation suites pass 201 tests.
-R-407--R-411 and R-416--R-419 remain structurally incomplete; the method
-inventory is 10/20, and scientific/field acceptance remain false. This local
+R-407--R-411, R-416--R-417 and R-419 remain structurally incomplete; the method
+inventory was 10/20 before the course follow-up below and is now 11/20.
+Scientific/field acceptance remain false. This local
 workflow change does not satisfy release or host cutover gates.
 
 The same CLI now includes `prepare`: it binds a source CSV to a closed metadata
@@ -133,3 +134,41 @@ The product still imports Shell-owned styles and uses its theme/font tokens;
 its remaining CSS is scoped to domain plots and workbench sizing. No shared-base
 change was needed. This measured UI pass does not establish user aesthetic
 acceptance, scientific acceptance or release readiness.
+
+## Magnetic course and manuscript follow-up
+
+The M04 course requirement now points to the existing 16-case
+`magnetic-theory.spec.ts` browser suite. It visits all nine chapters from both
+research pages in English and Spanish, light and dark themes, and 390 px and
+1600 px viewports. Fresh run `MAGNETIC_THEORY_QA_RUN=run-02` passed 16/16 in
+50.9 s; its captures and report are retained under the external validation
+root. The production build passed with 1,948 transformed modules. It still
+reports the 557 kB Workbench chunk and 14.2 MB ONNX WASM asset.
+
+Added `scripts/check_magnetic_docs.py` and regression coverage for the bilingual
+wiki/course contract, lesson and worked-derivation inventory, source links,
+versioned citation registry, shared-shell component use, and explicit
+nonavailability of a local magnetic fitting command. Six focused Python tests,
+Ruff, the checker and manuscript-depth gate pass. Current content measurements
+are 8,789 words, 16 equations, 8 figures, 7 tables, 44 references and one
+algorithm for the Beyond Methods paper, and 16,851 words, 32 equations,
+10 figures, 9 tables, 32 references and 3 algorithms for the technical report.
+These are source/depth checks, not peer review or method acceptance.
+
+The manuscript review confirms that BS-1 remains a negative synthetic result:
+the learned estimate loses to its regularized reference on the locked cohort,
+and the generator/scorer operator Q differs from the feature/reference
+operator A. Its current related-work section distinguishes DNRtomo, EKtomo,
+PINN, adjoint eikonal, matrix-free Gauss-Newton, travel-time completion and
+forward-only PINN work. An additional online check found LATTE's open-source
+adjoint eikonal framework and a 2026 geology-informed Bayesian tomography
+study; both are adjacent methods, not matched baselines for this fixed-grid
+supervised experiment. No manuscript edit is justified that would imply a
+head-to-head result or revive the failed novelty hypothesis. The draft remains
+unpublished and makes no beyond-state-of-the-art claim. [LATTE](https://doi.org/10.1093/gji/ggaf079),
+[geology-informed Bayesian tomography](https://doi.org/10.1093/gji/ggag374).
+
+The docs checker and browser suite close only the M04 documentation/course
+structure row. The optimizer binding, executable L2/IRLS inverse, accepted
+measured-survey field evaluation, API/result integration and live-host release
+gates remain open; the whole-product ledger still fails release acceptance.
